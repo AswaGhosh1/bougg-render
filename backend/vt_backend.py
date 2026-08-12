@@ -1,30 +1,32 @@
 #!/usr/bin/env python3
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import requests
 import hashlib
 import time
 import os
+from datetime import datetime
 
-app = Flask(__name__)
+# Create app with static folder pointing to parent directory
+app = Flask(__name__, static_folder='../', static_url_path='')
 CORS(app)
 
 # Your VirusTotal API Key
 VT_API_KEY = "0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b"
 VT_API_URL = "https://www.virustotal.com/api/v3"
 
-@app.route('/', methods=['GET'])
-def home():
-    return jsonify({
-        'status': 'running',
-        'message': 'BOUGG VirusTotal Backend',
-        'endpoints': {
-            '/scan': 'POST - Upload and scan files',
-            '/api/scan': 'POST - Upload and scan files (alias)',
-            '/health': 'GET - Health check'
-        }
-    })
+# ===== SERVE FRONTEND FILES =====
+@app.route('/')
+def serve_frontend():
+    """Serve the main HTML page"""
+    return send_from_directory('..', 'index.html')
 
+@app.route('/<path:path>')
+def serve_static(path):
+    """Serve static files (CSS, JS)"""
+    return send_from_directory('..', path)
+
+# ===== BACKEND API ENDPOINTS =====
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({
@@ -38,24 +40,24 @@ def scan_file():
     """Scan file with VirusTotal"""
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
-    
+
     file = request.files['file']
     if file.filename == '':
         return jsonify({'error': 'No file selected'}), 400
-    
+
     try:
         file_content = file.read()
         filename = file.filename
         sha256 = hashlib.sha256(file_content).hexdigest()
-        
+
         headers = {"x-apikey": VT_API_KEY}
-        
+
         # Check VirusTotal
         response = requests.get(
             f"{VT_API_URL}/files/{sha256}",
             headers=headers
         )
-        
+
         if response.status_code == 200:
             data = response.json()
             stats = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {})
@@ -75,12 +77,12 @@ def scan_file():
                 headers=headers,
                 files=files
             )
-            
+
             if upload.status_code != 200:
                 return jsonify({'error': 'Upload failed'}), 500
-            
+
             analysis_id = upload.json().get('data', {}).get('id')
-            
+
             for attempt in range(20):
                 time.sleep(2)
                 result = requests.get(
@@ -99,16 +101,17 @@ def scan_file():
                             'is_malware': stats.get('malicious', 0) > 0,
                             'source': 'VirusTotal Scan'
                         })
-            
+
             return jsonify({'error': 'Analysis timeout'}), 408
         else:
             return jsonify({'error': f'VirusTotal error: {response.status_code}'}), 500
-            
+
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
-    print("🛡️ BOUGG VirusTotal Backend")
+    print("🛡️ BOUGG VirusTotal Backend with Frontend")
     print(f"📡 Running on port: {port}")
+    print("🌐 Serving frontend from: ../")
     app.run(host='0.0.0.0', port=port)
