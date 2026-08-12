@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: bougg-malware-tool
+    runtime: python
+    repo: https://github.com/YOUR_USERNAME/bougg-render
+    plan: free
+    region: oregon
+    buildCommand: cd backend && pip install -r requirements.txt
+    startCommand: cd backend && gunicorn vt_backend:app
+    envVars:
+      - key: VT_API_KEY
+        value: 0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b
+      - key: PYTHON_VERSION
+        value: 3.9.0
