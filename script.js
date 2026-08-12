@@ -201,7 +201,7 @@ function scanFile() {
     `;
 
     // Call the VirusTotal backend
-    fetch('http://localhost:5000/scan', {
+    fetch('https://bougg-malware-tool.onrender.com/scan', {
         method: 'POST',
         body: formData
     })
