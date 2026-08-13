@@ -6,23 +6,46 @@ import hashlib
 import time
 import os
 
-app = Flask(__name__, static_folder='../')
+app = Flask(__name__)
 CORS(app)
+
+# Get the absolute path to the project root
+BASE_DIR = "/home/kali/Projects/Bougg/render-deploy"
 
 BOUGG_API_KEY = "0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b"
 BOUGG_API_URL = "https://www.virustotal.com/api/v3"
 
 @app.route('/')
 def serve_index():
-    return send_from_directory('..', 'index.html')
+    return send_from_directory(BASE_DIR, 'index.html')
+
+@app.route('/style.css')
+def serve_css():
+    return send_from_directory(BASE_DIR, 'style.css', mimetype='text/css')
+
+@app.route('/script.js')
+def serve_js():
+    return send_from_directory(BASE_DIR, 'script.js', mimetype='application/javascript')
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('..', 'path')
+    return send_from_directory(BASE_DIR, path)
 
 @app.route('/api/health')
 def health():
     return jsonify({'status': 'ok', 'message': 'BOUGG Security Engine is running!'})
+
+@app.route('/api/test')
+def test():
+    import os
+    files = {}
+    for f in ['index.html', 'style.css', 'script.js']:
+        path = os.path.join(BASE_DIR, f)
+        files[f] = os.path.exists(path)
+    return jsonify({
+        'base_dir': BASE_DIR,
+        'files': files
+    })
 
 @app.route('/api/scan', methods=['POST'])
 def scan_file():
@@ -78,8 +101,8 @@ def scan_file():
                     'detailed_results': detailed,
                     'source': 'BOUGG Security Database'
                 }
-        except:
-            pass
+        except Exception as e:
+            print(f"API error: {e}")
         
         return jsonify({
             'success': True,
@@ -90,8 +113,11 @@ def scan_file():
         })
         
     except Exception as e:
+        print(f"Scan error: {e}")
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    print(f"🛡️ BOUGG Backend running on port {port}")
+    print(f"📁 Serving files from: {BASE_DIR}")
     app.run(host='0.0.0.0', port=port)
