@@ -9,7 +9,6 @@ import os
 app = Flask(__name__, static_folder='../')
 CORS(app)
 
-# BOUGG Security API Key
 BOUGG_API_KEY = "0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b"
 BOUGG_API_URL = "https://www.virustotal.com/api/v3"
 
@@ -19,7 +18,7 @@ def serve_index():
 
 @app.route('/<path:path>')
 def serve_static(path):
-    return send_from_directory('..', path)
+    return send_from_directory('..', 'path')
 
 @app.route('/api/health')
 def health():
@@ -40,7 +39,6 @@ def scan_file():
         sha256 = hashlib.sha256(content).hexdigest()
         headers = {'x-apikey': BOUGG_API_KEY}
         
-        # Get file info
         file_info = {
             'filename': filename,
             'size_bytes': len(content),
@@ -52,7 +50,6 @@ def scan_file():
             'extension': filename.split('.')[-1].upper() if '.' in filename else 'None'
         }
         
-        # Check BOUGG Security Database
         scan_results = None
         try:
             response = requests.get(
