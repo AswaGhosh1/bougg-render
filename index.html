@@ -202,11 +202,39 @@
 <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
     <div style="max-width:800px; margin:50px auto; background:white; border-radius:15px; padding:30px; position:relative;">
         <button onclick="closeDetails()" style="position:absolute; top:10px; right:20px; font-size:30px; background:none; border:none; cursor:pointer;">&times;</button>
-        <h2 style="color:#33a351; margin-bottom:20px;">🔍 Detailed VirusTotal Results</h2>
+        <h2 style="color:#33a351; margin-bottom:20px;">🔍 Detailed Results</h2>
         <div id="detailsContent"></div>
     </div>
 </div>
 
+<!-- Add after VirusTotal results -->
+<div id="peAnalysis" style="display:none; margin-top: 20px; border-top: 2px solid #e9ecef; padding-top: 20px;">
+    <h3 style="color: #33a351;">🔬 PE Analysis (PEStudio-Style)</h3>
+    
+    <!-- File Info -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+        <h4>📋 File Information</h4>
+        <div id="peFileInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;"></div>
+    </div>
+    
+    <!-- Sections -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+        <h4>📂 Sections</h4>
+        <div id="peSections" style="overflow-x: auto;"></div>
+    </div>
+    
+    <!-- Suspicious APIs -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+        <h4>⚠️ Suspicious APIs</h4>
+        <div id="peSuspiciousApis"></div>
+    </div>
+    
+    <!-- Risk Assessment -->
+    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+        <h4>🎯 Risk Assessment</h4>
+        <div id="peRisk"></div>
+    </div>
+</div>
 
 
             <!-- ===== FEATURES PAGE ===== -->
@@ -324,7 +352,7 @@
                     <div class="about-content">
                         <div class="about-section">
                             <h3>Our Mission</h3>
-                           <p>BOUGG was created by <strong>Aswaghosh</strong> a Cyber Security Professional, to provide accessible, professional-grade malware detection tools to users worldwide. I believe that everyone deserves protection from cyber threats, regardless of technical expertise.</p>
+                           <p>BOUGG was created to provide accessible and professional-grade malware detection tools to users worldwide. We believe that everyone deserves protection from cyber threats, regardless of technical expertise.</p>
 </div>
                         
                         <div class="about-section">

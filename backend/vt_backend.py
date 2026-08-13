@@ -5,6 +5,8 @@ import requests
 import hashlib
 import time
 import os
+import tempfile
+from pe_analyzer import PEAnalyzer
 
 app = Flask(__name__, static_folder='../')
 CORS(app)
@@ -12,136 +14,159 @@ CORS(app)
 VT_API_KEY = "0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b"
 VT_API_URL = "https://www.virustotal.com/api/v3"
 
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve_frontend(path):
-    if not path:
+@app.route('/')
+def serve_index():
+    try:
         return send_from_directory('..', 'index.html')
-    file_path = os.path.join('..', path)
-    if os.path.exists(file_path):
-        if path.endswith('.css'):
-            return send_from_directory('..', path, mimetype='text/css')
-        elif path.endswith('.js'):
-            return send_from_directory('..', path, mimetype='application/javascript')
-        elif path.endswith('.json'):
-            return send_from_directory('..', path, mimetype='application/json')
-        else:
-            return send_from_directory('..', path)
-    return f"File not found: {path}", 404
+    except Exception as e:
+        return f"Error: {str(e)}", 500
 
-@app.route('/api/health', methods=['GET'])
+@app.route('/style.css')
+def serve_css():
+    try:
+        return send_from_directory('..', 'style.css', mimetype='text/css')
+    except Exception as e:
+        return f"Error: {str(e)}", 404
+
+@app.route('/script.js')
+def serve_js():
+    try:
+        return send_from_directory('..', 'script.js', mimetype='application/javascript')
+    except Exception as e:
+        return f"Error: {str(e)}", 404
+
+@app.route('/manifest.json')
+def serve_manifest():
+    try:
+        return send_from_directory('..', 'manifest.json', mimetype='application/json')
+    except Exception as e:
+        return "Manifest not found", 404
+
+@app.route('/api/health')
 def health():
-    return jsonify({'status': 'healthy', 'api_key_configured': bool(VT_API_KEY)})
+    return {'status': 'ok', 'message': 'BOUGG backend is running!'}
 
 @app.route('/api/scan', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:
-        return jsonify({'error': 'No file uploaded'}), 400
-
+        return {'error': 'No file uploaded'}, 400
+    
     file = request.files['file']
     if file.filename == '':
-        return jsonify({'error': 'No file selected'}), 400
-
+        return {'error': 'No file selected'}, 400
+    
     try:
-        file_content = file.read()
-        filename = file.filename
-        sha256 = hashlib.sha256(file_content).hexdigest()
-
-        headers = {"x-apikey": VT_API_KEY}
-
-        # Check
+        content = file.read()
+        sha256 = hashlib.sha256(content).hexdigest()
+        headers = {'x-apikey': VT_API_KEY}
+        
+        # Check VirusTotal
         response = requests.get(
-            f"{VT_API_URL}/files/{sha256}",
+            f'{VT_API_URL}/files/{sha256}',
             headers=headers
         )
-
+        
         if response.status_code == 200:
             data = response.json()
             stats = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {})
-            # Get full analysis results
             results = data.get('data', {}).get('attributes', {}).get('last_analysis_results', {})
-
-            # Format detailed results
-            detailed_results = []
+            
+            detailed = []
             for engine, result in results.items():
                 if result.get('category') in ['malicious', 'suspicious']:
-                    detailed_results.append({
+                    detailed.append({
                         'engine': engine,
                         'category': result.get('category', 'unknown'),
-                        'result': result.get('result', 'Detected'),
-                        'method': result.get('method', ''),
-                        'engine_version': result.get('engine_version', ''),
-                        'engine_update': result.get('engine_update', '')
+                        'result': result.get('result', 'Detected')
                     })
-
-            return jsonify({
+            
+            # Do PE analysis
+            pe_analysis = None
+            if file.filename.lower().endswith(('.exe', '.dll', '.sys', '.ocx', '.cpl', '.scr')):
+                with tempfile.NamedTemporaryFile(delete=False, suffix='.exe') as tmp:
+                    tmp.write(content)
+                    tmp_path = tmp.name
+                try:
+                    analyzer = PEAnalyzer(tmp_path, content)
+                    pe_analysis = analyzer.analyze()
+                finally:
+                    os.unlink(tmp_path)
+            
+            return {
                 'success': True,
-                'filename': filename,
+                'filename': file.filename,
                 'sha256': sha256,
                 'stats': stats,
                 'is_malware': stats.get('malicious', 0) > 0,
                 'source': 'VirusTotal Database',
-                'detailed_results': detailed_results,
-                'total_engines': len(results)
-            })
+                'detailed_results': detailed,
+                'pe_analysis': pe_analysis
+            }
         elif response.status_code == 404:
             # Upload and scan
-            files = {'file': (filename, file_content)}
+            files = {'file': (file.filename, content)}
             upload = requests.post(
-                f"{VT_API_URL}/files",
+                f'{VT_API_URL}/files',
                 headers=headers,
                 files=files
             )
-
+            
             if upload.status_code != 200:
-                return jsonify({'error': 'Upload failed'}), 500
-
+                return {'error': 'Upload failed'}, 500
+            
             analysis_id = upload.json().get('data', {}).get('id')
-
-            for attempt in range(20):
+            
+            for _ in range(20):
                 time.sleep(2)
                 result = requests.get(
-                    f"{VT_API_URL}/analyses/{analysis_id}",
+                    f'{VT_API_URL}/analyses/{analysis_id}',
                     headers=headers
                 )
                 if result.status_code == 200:
                     data = result.json()
                     if data.get('data', {}).get('attributes', {}).get('status') == 'completed':
                         stats = data.get('data', {}).get('attributes', {}).get('stats', {})
-                        # Get results from analysis
                         results = data.get('data', {}).get('attributes', {}).get('results', {})
-
-                        detailed_results = []
+                        
+                        detailed = []
                         for engine, result_data in results.items():
                             if result_data.get('category') in ['malicious', 'suspicious']:
-                                detailed_results.append({
+                                detailed.append({
                                     'engine': engine,
                                     'category': result_data.get('category', 'unknown'),
-                                    'result': result_data.get('result', 'Detected'),
-                                    'method': result_data.get('method', ''),
-                                    'engine_version': result_data.get('engine_version', ''),
-                                    'engine_update': result_data.get('engine_update', '')
+                                    'result': result_data.get('result', 'Detected')
                                 })
-
-                        return jsonify({
+                        
+                        # Do PE analysis
+                        pe_analysis = None
+                        if file.filename.lower().endswith(('.exe', '.dll', '.sys', '.ocx', '.cpl', '.scr')):
+                            with tempfile.NamedTemporaryFile(delete=False, suffix='.exe') as tmp:
+                                tmp.write(content)
+                                tmp_path = tmp.name
+                            try:
+                                analyzer = PEAnalyzer(tmp_path, content)
+                                pe_analysis = analyzer.analyze()
+                            finally:
+                                os.unlink(tmp_path)
+                        
+                        return {
                             'success': True,
-                            'filename': filename,
+                            'filename': file.filename,
                             'sha256': sha256,
                             'stats': stats,
                             'is_malware': stats.get('malicious', 0) > 0,
-
-                            'detailed_results': detailed_results,
-                            'total_engines': len(results)
-                        })
-
-            return jsonify({'error': 'Analysis timeout'}), 408
+                            'source': 'VirusTotal Scan',
+                            'detailed_results': detailed,
+                            'pe_analysis': pe_analysis
+                        }
+            
+            return {'error': 'Analysis timeout'}, 408
         else:
-            return jsonify({'error': f' error: {response.status_code}'}), 500
-
+            return {'error': f'VirusTotal error: {response.status_code}'}, 500
+            
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        return {'error': str(e)}, 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port)
-

@@ -51,6 +51,7 @@ function initUploadZone() {
             document.getElementById('fileInfo').style.display = 'block';
             document.getElementById('uploadZone').style.display = 'none';
             document.getElementById('scanResult').style.display = 'none';
+            document.getElementById('peAnalysis').style.display = 'none';
         }
     });
 }
@@ -81,6 +82,7 @@ function scanFile() {
             <p style="font-size: 14px; color: #6c757d;">Checking 70+ antivirus engines</p>
         </div>
     `;
+    document.getElementById('peAnalysis').style.display = 'none';
     
     fetch('/api/scan', {
         method: 'POST',
@@ -95,6 +97,11 @@ function scanFile() {
         
         lastScanData = data;
         displayResults(data);
+        
+        // Show PE analysis if available
+        if (data.pe_analysis) {
+            displayPEAnalysis(data.pe_analysis);
+        }
     })
     .catch(function(error) {
         console.error('Error:', error);
@@ -109,7 +116,7 @@ function displayResults(data) {
     var suspicious = stats.suspicious || 0;
     var undetected = stats.undetected || 0;
     var isMalware = data.is_malware || false;
-    var totalEngines = data.total_engines || 0;
+    var totalEngines = data.detailed_results ? data.detailed_results.length + undetected : 0;
     
     result.className = 'scan-result ' + (isMalware ? 'danger' : 'safe');
     result.innerHTML = `
@@ -133,13 +140,66 @@ function displayResults(data) {
         </div>
         
         <div style="font-size: 13px; color: #6c757d; margin: 10px 0;">
-            Source: ${data.source || 'VirusTotal'} | ${malicious}/${totalEngines} engines detected
+            Source: ${data.source || 'VirusTotal'} | ${malicious}/${malicious + suspicious + undetected} engines detected
         </div>
         
         ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">🔍 View Detected Threats (${malicious})</button>` : ''}
         
         <button class="btn btn-secondary" onclick="resetScan()" style="margin-top: 15px;">Scan Another File</button>
     `;
+}
+
+function displayPEAnalysis(pe) {
+    var container = document.getElementById('peAnalysis');
+    container.style.display = 'block';
+    
+    // File Info
+    var infoHTML = '';
+    var info = pe.file_info || {};
+    for (var key in info) {
+        infoHTML += `<div><strong>${key.replace(/_/g, ' ').toUpperCase()}:</strong> ${info[key] || 'N/A'}</div>`;
+    }
+    document.getElementById('peFileInfo').innerHTML = infoHTML;
+    
+    // Sections
+    var sections = pe.sections || [];
+    var sectionsHTML = '<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:#33a351; color:white;"><th style="padding:8px;">Name</th><th style="padding:8px;">Entropy</th><th style="padding:8px;">Size</th><th style="padding:8px;">Status</th></tr>';
+    sections.forEach(function(s) {
+        var status = s.suspicious ? '⚠️ Suspicious' : '✅ Normal';
+        var color = s.suspicious ? '#dc3545' : '#28a745';
+        sectionsHTML += `<tr style="border-bottom:1px solid #eee;">
+            <td style="padding:8px;"><strong>${s.name}</strong></td>
+            <td style="padding:8px;">${s.entropy}</td>
+            <td style="padding:8px;">${s.size_human}</td>
+            <td style="padding:8px; color:${color};">${status}</td>
+        </tr>`;
+    });
+    sectionsHTML += '</table>';
+    document.getElementById('peSections').innerHTML = sectionsHTML;
+    
+    // Suspicious APIs
+    var apis = pe.suspicious_apis || [];
+    var apisHTML = '';
+    if (apis.length > 0) {
+        apisHTML = '<ul style="list-style:none; padding:0;">';
+        apis.forEach(function(api) {
+            apisHTML += `<li style="padding:5px; border-bottom:1px solid #eee;">🔴 <strong>${api.function}</strong> [${api.dll}] → ${api.category}</li>`;
+        });
+        apisHTML += '</ul>';
+    } else {
+        apisHTML = '<p style="color:#28a745;">✅ No suspicious APIs detected</p>';
+    }
+    document.getElementById('peSuspiciousApis').innerHTML = apisHTML;
+    
+    // Risk
+    var risk = pe.overall_risk || 'Low';
+    var riskColor = risk === 'Critical' ? '#dc3545' : risk === 'High' ? '#fd7e14' : risk === 'Medium' ? '#ffc107' : '#28a745';
+    var riskHTML = `<div style="padding:15px; border-radius:8px; background:${riskColor}20; border:2px solid ${riskColor};">
+        <div style="font-size:24px; font-weight:700; color:${riskColor};">${risk}</div>
+        <div style="margin-top:10px;">${pe.risk_factors ? pe.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : 'No significant risk factors'}</div>
+        ${pe.packer_detected ? `<div style="margin-top:10px; background:#fff3cd; padding:5px 10px; border-radius:5px;">📦 Packer: ${pe.packer_detected}</div>` : ''}
+    </div>`;
+    document.getElementById('peRisk').innerHTML = riskHTML;
 }
 
 // ===== SHOW DETAILED RESULTS =====
@@ -160,7 +220,7 @@ function showDetails() {
         <div style="margin-bottom:20px;">
             <p><strong>File:</strong> ${lastScanData.filename}</p>
             <p><strong>SHA256:</strong> <span style="font-size:12px; word-break:break-all;">${lastScanData.sha256}</span></p>
-            <p><strong>Total Detections:</strong> ${lastScanData.stats.malicious}/${lastScanData.total_engines}</p>
+            <p><strong>Total Detections:</strong> ${lastScanData.stats.malicious}/${Object.keys(lastScanData.stats || {}).reduce(function(a,b){return a+lastScanData.stats[b];}, 0)}</p>
         </div>
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; font-size:14px;">
@@ -208,6 +268,7 @@ function resetScan() {
     document.getElementById('fileInfo').style.display = 'none';
     document.getElementById('uploadZone').style.display = 'block';
     document.getElementById('scanResult').style.display = 'none';
+    document.getElementById('peAnalysis').style.display = 'none';
     lastScanData = null;
 }
 
@@ -216,6 +277,7 @@ function clearFile() {
     document.getElementById('fileInfo').style.display = 'none';
     document.getElementById('uploadZone').style.display = 'block';
     document.getElementById('scanResult').style.display = 'none';
+    document.getElementById('peAnalysis').style.display = 'none';
     lastScanData = null;
 }
 
