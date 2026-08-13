@@ -1,11 +1,18 @@
 // ===== DOM READY =====
 document.addEventListener('DOMContentLoaded', function() {
+    // Hide preloader immediately
+    var preloader = document.getElementById('preloader');
+    if (preloader) {
+        preloader.classList.add('hidden');
+    }
+    
     setTimeout(function() {
         var preloader = document.getElementById('preloader');
         if (preloader) {
             preloader.classList.add('hidden');
         }
     }, 1000);
+    
     initNavigation();
     initUploadZone();
     initCounterAnimation();
@@ -178,8 +185,8 @@ function displayResults(data) {
     }
     
     result.innerHTML = `
-        <div class="result-icon">${isMalware ?}</div>
-        <h3>${isMalware ? 'Malware Detected!' : 'File is Safe!'}</h3>
+        <div class="result-icon">${isMalware ? '🚨' : '✅'}</div>
+        <h3>${isMalware ? '⚠️ Malware Detected!' : '✅ File is Safe!'}</h3>
         <p>${isMalware ? malicious + ' antivirus engines detected threats' : 'No threats detected by any engine'}</p>
         
         <div class="result-stats">
@@ -210,6 +217,8 @@ function displayResults(data) {
 // ===== DISPLAY FILE INFO =====
 function displayFileInfo(info) {
     var container = document.getElementById('fileAnalysis');
+    if (!container) return;
+    
     container.style.display = 'block';
     container.scrollIntoView({ behavior: 'smooth' });
     
@@ -242,6 +251,8 @@ function showDetails() {
     var details = vt.detailed_results || [];
     var modal = document.getElementById('detailsModal');
     var content = document.getElementById('detailsContent');
+    
+    if (!modal || !content) return;
     
     if (details.length === 0) {
         content.innerHTML = '<p>No detailed results available.</p>';
@@ -292,12 +303,17 @@ function showDetails() {
 }
 
 function closeDetails() {
-    document.getElementById('detailsModal').style.display = 'none';
+    var modal = document.getElementById('detailsModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 }
 
 // ===== COUNTER ANIMATION =====
 function initCounterAnimation() {
     var counters = document.querySelectorAll('.stat-number');
+    
+    if (!counters.length) return;
     
     var observer = new IntersectionObserver(function(entries) {
         entries.forEach(function(entry) {
@@ -332,18 +348,24 @@ function animateCounter(element, target) {
 function submitFeedback(event) {
     event.preventDefault();
     
-    var text = document.getElementById('feedbackText').value.trim();
-    if (!text) {
+    var text = document.getElementById('feedbackText');
+    if (!text) return;
+    
+    var feedbackText = text.value.trim();
+    if (!feedbackText) {
         alert('Please enter your feedback.');
         return;
     }
     
     var successMsg = document.getElementById('feedbackSuccess');
-    successMsg.classList.add('show');
+    if (successMsg) {
+        successMsg.classList.add('show');
+    }
     
     setTimeout(function() {
-        document.getElementById('feedbackForm').reset();
-        successMsg.classList.remove('show');
+        var form = document.getElementById('feedbackForm');
+        if (form) form.reset();
+        if (successMsg) successMsg.classList.remove('show');
     }, 3000);
 }
 
