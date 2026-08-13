@@ -2,4 +2,5 @@ Flask==2.3.2
 flask-cors==4.0.0
 requests==2.31.0
 gunicorn==21.2.0
-pefile==2023.2.7
+python-magic==0.4.27
+chardet==5.2.0

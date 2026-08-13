@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOUGG - Professional Malware Detection & Security Tool</title>
+    <title>BOUGG - Malware Detection Tool</title>
     <meta name="description" content="BOUGG is a professional malware detection tool that scans files for viruses, trojans, ransomware, and other security threats.">
     <meta name="keywords" content="malware detection, virus scanner, security tool, online malware scanner">
     <meta name="author" content="BOUGG Security Team">
@@ -18,7 +18,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     
     <link rel="stylesheet" href="style.css">
 </head>
@@ -32,18 +32,17 @@
     </div>
 
     <!-- ===== HEADER ===== -->
-    <header class="header" role="banner">
+    <header class="header">
         <div class="container">
             <div class="header-inner">
                 <div class="logo">
-                    <a href="/" aria-label="BOUGG Home">
+                    <a href="/">
                         <div class="logo-icon">🐞</div>
                         <span class="logo-text">BOUGG</span>
                     </a>
                 </div>
-                
-                <nav class="main-nav" role="navigation" aria-label="Main Navigation">
-                    <button class="mobile-menu-toggle" aria-label="Toggle Menu" id="menuToggle">
+                <nav class="main-nav">
+                    <button class="mobile-menu-toggle" id="menuToggle">
                         <span></span>
                         <span></span>
                         <span></span>
@@ -52,7 +51,6 @@
                         <li><a href="#home" class="active" data-page="home">Home</a></li>
                         <li><a href="#scan" data-page="scan">Scanner</a></li>
                         <li><a href="#features" data-page="features">Features</a></li>
-                        <li><a href="#feedback" data-page="feedback">Feedback</a></li>
                         <li><a href="#about" data-page="about">About</a></li>
                     </ul>
                 </nav>
@@ -65,14 +63,15 @@
         <div class="container">
 
             <!-- ===== HOME PAGE ===== -->
-            <section id="home" class="page active" aria-label="Home">
+            <section id="home" class="page active">
                 <div class="hero">
                     <div class="hero-content">
-                        <h1>Advanced <span class="highlight">Malware Detection</span> Tool</h1>
-                        <p>Protect your system from viruses, trojans, ransomware, and zero-day threats with our cutting-edge detection engine.</p>
+                        
+                        <h1>Advanced <span class="highlight">Malware Detection</span></h1>
+                        <p>Protect your system from viruses, trojans, ransomware, and zero-day threats with our cutting-edge detection engine powered by VirusTotal.</p>
                         <div class="hero-actions">
                             <a href="#scan" class="btn btn-primary btn-large" onclick="switchPage('scan')">
-                                🚀 Start Scanning Now
+                                Start Scanning
                             </a>
                             <a href="#features" class="btn btn-secondary btn-large" onclick="switchPage('features')">
                                 Learn More
@@ -80,16 +79,16 @@
                         </div>
                         <div class="hero-stats">
                             <div class="stat">
-                                <span class="stat-number" data-target="100000">0</span>
+                                <span class="stat-number" data-target="10000">0</span>
                                 <span class="stat-label">Files Scanned</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-number" data-target="50000">0</span>
+                                <span class="stat-number" data-target="5000">0</span>
                                 <span class="stat-label">Threats Detected</span>
                             </div>
                             <div class="stat">
                                 <span class="stat-number" data-target="99.9">0</span>
-                                <span class="stat-label">% Detection Rate</span>
+                                <span class="stat-label">Detection Rate</span>
                             </div>
                         </div>
                     </div>
@@ -105,12 +104,12 @@
             </section>
 
             <!-- ===== SCAN PAGE ===== -->
-            <section id="scan" class="page" aria-label="File Scanner">
+            <section id="scan" class="page">
                 <div class="card scan-card">
                     <div class="card-header">
-                        <span class="card-icon">📂</span>
-                        <h2>File Malware Scanner</h2>
-                        <p>Upload any file to check for malware, viruses, and suspicious patterns</p>
+                        <span class="card-icon"></span>
+                        <h2>VirusTotal File Scanner</h2>
+                        <p>Upload any file to scan with 70+ antivirus engines</p>
                     </div>
                     
                     <div class="scan-interface">
@@ -124,60 +123,35 @@
                         
                         <div id="fileInfo" class="file-info" style="display:none;">
                             <div class="file-details">
-                                <span class="file-icon">📄</span>
+                                <span class="file-icon"></span>
                                 <div>
                                     <p class="file-name" id="fileName">filename.exe</p>
                                     <p class="file-size" id="fileSize">2.4 MB</p>
                                 </div>
                                 <button class="btn btn-danger btn-sm" onclick="clearFile()">✕</button>
                             </div>
-                            <button class="btn btn-success btn-large" onclick="scanFile()">
-                                🔬 Scan File
-                            </button>
+                            
                         </div>
                         
-                        <div id="scanResult" class="scan-result" style="display:none;">
-                            <div class="result-icon" id="resultIcon">✅</div>
-                            <h3 id="resultTitle">File is Safe!</h3>
-                            <p id="resultMessage">No threats detected</p>
-                            <div id="resultDetails" class="result-details">
-                                <div class="detail-item">
-                                    <span class="detail-label">File Name:</span>
-                                    <span id="detailName">-</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">File Size:</span>
-                                    <span id="detailSize">-</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">File Type:</span>
-                                    <span id="detailType">-</span>
-                                </div>
-                                <div class="detail-item">
-                                    <span class="detail-label">Scan Time:</span>
-                                    <span id="detailTime">-</span>
-                                </div>
-                            </div>
-                            <button class="btn btn-secondary" onclick="resetScan()">Scan Another File</button>
-                        </div>
+                        <div id="scanResult" class="scan-result" style="display:none;"></div>
                     </div>
                 </div>
             </section>
 
             <!-- ===== DETAILED RESULTS MODAL ===== -->
             <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
-                <div style="max-width:800px; margin:50px auto; background:white; border-radius:15px; padding:30px; position:relative;">
-                    <button onclick="closeDetails()" style="position:absolute; top:10px; right:20px; font-size:30px; background:none; border:none; cursor:pointer;">&times;</button>
-                    <h2 style="color:#33a351; margin-bottom:20px;">Detailed Results</h2>
+                <div class="modal-content">
+                    <button onclick="closeDetails()" class="modal-close">&times;</button>
+                    <h2>Detailed Results</h2>
                     <div id="detailsContent"></div>
                 </div>
             </div>
 
-            <!-- ===== FILE ANALYSIS RESULTS ===== -->
+            <!-- ===== FILE INFORMATION ===== -->
             <div id="fileAnalysis" style="display:none; margin-top: 20px;"></div>
 
             <!-- ===== FEATURES PAGE ===== -->
-            <section id="features" class="page" aria-label="Features">
+            <section id="features" class="page">
                 <div class="card">
                     <div class="card-header">
                         <span class="card-icon"></span>
@@ -188,13 +162,8 @@
                     <div class="features-grid">
                         <div class="feature-card">
                             <div class="feature-icon">🔍</div>
-                            <h4>Real-time Scanning</h4>
-                            <p>Instant detection of malware, viruses, and suspicious files</p>
-                        </div>
-                        <div class="feature-card">
-                            <div class="feature-icon">🧠</div>
-                            <h4>AI-Powered Analysis</h4>
-                            <p>Advanced machine learning algorithms for threat detection</p>
+                            <h4>70+ Antivirus Engines</h4>
+                            <p>Scan with multiple antivirus engines simultaneously</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">📊</div>
@@ -204,75 +173,32 @@
                         <div class="feature-card">
                             <div class="feature-icon">🔒</div>
                             <h4>Privacy First</h4>
-                            <p>Files never leave your device - 100% private scanning</p>
+                            <p>Files are scanned securely with VirusTotal</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">⚡</div>
-                            <h4>Lightning Fast</h4>
-                            <p>Optimized scanning engine for quick results</p>
+                            <h4>Real-time Results</h4>
+                            <p>Instant detection and analysis</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">🔄</div>
                             <h4>Regular Updates</h4>
                             <p>Constantly updated threat database</p>
                         </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🌐</div>
+                            <h4>File Information</h4>
+                            <p>Detailed file metadata and type detection</p>
+                        </div>
                     </div>
-                </div>
-            </section>
-
-            <!-- ===== FEEDBACK PAGE ===== -->
-            <section id="feedback" class="page" aria-label="Feedback">
-                <div class="card">
-                    <div class="card-header">
-                        <span class="card-icon"></span>
-                        <h2>Send Us Your Feedback</h2>
-                        <p>Help us improve BOUGG - your opinion matters!</p>
-                    </div>
-                    
-                    <form class="feedback-form" id="feedbackForm" onsubmit="submitFeedback(event)">
-                        <div class="form-group">
-                            <label for="feedbackName">Your Name</label>
-                            <input type="text" id="feedbackName" placeholder="John Doe" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="feedbackEmail">Email Address</label>
-                            <input type="email" id="feedbackEmail" placeholder="john@example.com" class="form-control">
-                        </div>
-                        <div class="form-group">
-                            <label for="feedbackCategory">Category</label>
-                            <select id="feedbackCategory" class="form-control">
-                                <option value="general">General Feedback</option>
-                                <option value="bug">Bug Report</option>
-                                <option value="feature">Feature Request</option>
-                                <option value="security">Security Concern</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="feedbackRating">Rating</label>
-                            <div class="rating-stars" id="ratingStars">
-                                <span data-value="1">⭐</span>
-                                <span data-value="2">⭐</span>
-                                <span data-value="3">⭐</span>
-                                <span data-value="4">⭐</span>
-                                <span data-value="5">⭐</span>
-                            </div>
-                            <input type="hidden" id="feedbackRating" value="5">
-                        </div>
-                        <div class="form-group">
-                            <label for="feedbackText">Your Feedback</label>
-                            <textarea id="feedbackText" placeholder="Tell us about your experience with BOUGG..." class="form-control" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-large">Submit Feedback</button>
-                        <div id="feedbackSuccess" class="feedback-success">Thank you for your valuable feedback!</div>
-                    </form>
                 </div>
             </section>
 
             <!-- ===== ABOUT PAGE ===== -->
-            <section id="about" class="page" aria-label="About">
+            <section id="about" class="page">
                 <div class="card">
                     <div class="card-header">
-                        <span class="card-icon">🐞</span>
+                        <span class="card-icon"></span>
                         <h2>About BOUGG</h2>
                         <p>Your trusted partner in cybersecurity</p>
                     </div>
@@ -280,7 +206,7 @@
                     <div class="about-content">
                         <div class="about-section">
                             <h3>Our Mission</h3>
-                            <p>BOUGG was created to provide accessible and professional-grade malware detection tools to users worldwide. We believe that everyone deserves protection from cyber threats, regardless of technical expertise.</p>
+                            <p>BOUGG was created to provide accessible and professional-grade malware detection tools to users worldwide. We believe that everyone deserves protection from cyber threats.</p>
                         </div>
                         
                         <div class="about-section">
@@ -296,8 +222,8 @@
                                 <div class="step">
                                     <span class="step-number">2</span>
                                     <div>
-                                        <h4>Scan & Analyze</h4>
-                                        <p>Our engine checks against thousands of threat signatures</p>
+                                        <h4>Scan</h4>
+                                        <p>Checked against 70+ antivirus engines</p>
                                     </div>
                                 </div>
                                 <div class="step">
@@ -311,22 +237,11 @@
                         </div>
                         
                         <div class="about-section">
-                            <h3>Technology Stack</h3>
-                            <div class="tech-tags">
-                                <span class="tech-tag">HTML5</span>
-                                <span class="tech-tag">CSS3</span>
-                                <span class="tech-tag">JavaScript ES6</span>
-                                <span class="tech-tag">AI/ML</span>
-                                <span class="tech-tag">WebAssembly</span>
-                                <span class="tech-tag">Security First</span>
-                            </div>
-                        </div>
-                        
-                        <div class="about-section">
-                            <h3>Contact Us</h3>
+                            <h3>Contact</h3>
                             <div class="contact-info">
-                                <p>Github: <a href="#">https://github.com/AswaGhosh1</a></p>
-                                <p>LinkedIn: <a href="#">https://www.linkedin.com/in/aswaghosh-vishnu-gopan-18a537216/</a></p>
+                               
+                                <p>🐙 <a href="https://github.com/AswaGhosh1">GitHub</a></p>
+                                <p>💼 <a href="https://www.linkedin.com/in/aswaghosh-vishnu-gopan-18a537216/">LinkedIn</a></p>
                             </div>
                         </div>
                     </div>
@@ -337,15 +252,15 @@
     </main>
 
     <!-- ===== FOOTER ===== -->
-    <footer class="footer" role="contentinfo">
+    <footer class="footer">
         <div class="container">
             <div class="footer-grid">
                 <div class="footer-col">
                     <div class="logo">
-                        <div class="logo-icon">🛡️</div>
+                        <div class="logo-icon">🐞</div>
                         <span class="logo-text">BOUGG</span>
                     </div>
-                    <p>Advanced malware detection tool for everyone. Stay safe, stay secure.</p>
+                    <p>Advanced malware detection for everyone. Stay safe, stay secure.</p>
                 </div>
                 <div class="footer-col">
                     <h4>Quick Links</h4>
@@ -353,18 +268,17 @@
                         <li><a href="#home" onclick="switchPage('home')">Home</a></li>
                         <li><a href="#scan" onclick="switchPage('scan')">Scanner</a></li>
                         <li><a href="#features" onclick="switchPage('features')">Features</a></li>
-                        <li><a href="#feedback" onclick="switchPage('feedback')">Feedback</a></li>
+                        <li><a href="#about" onclick="switchPage('about')">About</a></li>
                     </ul>
                 </div>
-            </div>
+               
             <div class="footer-bottom">
                 <p>&copy; 2026 BOUGG Malware Detection Tool. All rights reserved.</p>
-                <p class="footer-credit">Made with ❤️ by the BOUGG Security Team</p>
+                <p class="footer-credit">Made with ❤️ by the BOUGG Team</p>
             </div>
         </div>
     </footer>
 
-    <!-- ===== SCRIPTS ===== -->
     <script src="script.js"></script>
 </body>
 </html>
