@@ -78,7 +78,7 @@ function scanFile() {
     result.innerHTML = `
         <div style="text-align: center; padding: 20px;">
             <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <p style="margin-top: 10px;"Analyzing file...</p>
+            <p style="margin-top: 10px;">Analyzing file...</p>
             <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
         </div>
     `;
@@ -117,7 +117,7 @@ function displayResults(data) {
     
     result.className = 'scan-result ' + (isMalware ? 'danger' : 'safe');
     result.innerHTML = `
-        <div class="result-icon">${isMalware ?  : }</div>
+        <div class="result-icon">${isMalware ? 'X' : 'Check'}</div>
         <h3>${isMalware ? 'Malware Detected!' : 'File is Safe!'}</h3>
         <p>${isMalware ? malicious + ' antivirus engines detected threats' : 'No threats detected'}</p>
         
@@ -140,7 +140,7 @@ function displayResults(data) {
             Source: ${vt.source || 'Bougg Database'} | ${malicious}/${total || 1} engines detected
         </div>
         
-        ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;"> View Detected Threats (${malicious})</button>` : ''}
+        ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">View Detected Threats (${malicious})</button>` : ''}
         
         <button class="btn btn-secondary" onclick="resetScan()" style="margin-top: 15px;">Scan Another File</button>
     `;
@@ -151,18 +151,18 @@ function displayFileAnalysis(analysis) {
     container.style.display = 'block';
     container.scrollIntoView({ behavior: 'smooth' });
     
-    var html = `<h3 style="color:#33a351; margin-top:20px;"> Deep File Analysis</h3>`;
+    var html = `<h3 style="color:#33a351; margin-top:20px;">Deep File Analysis</h3>`;
     
     // File Info
     var info = analysis.file_info || {};
     var hashes = analysis.hashes || {};
     html += `
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4> File Information</h4>
+            <h4>File Information</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
                 <div><strong>File Type:</strong> ${analysis.file_type || 'Unknown'}</div>
                 <div><strong>Size:</strong> ${info.file_size_human || 'N/A'}</div>
-                <div><strong>Entropy:</strong> ${analysis.entropy || 'N/A'} ${analysis.entropy > 7.0 ? '⚠️ (High - possible encryption)' : ''}</div>
+                <div><strong>Entropy:</strong> ${analysis.entropy || 'N/A'} ${analysis.entropy > 7.0 ? '(High - possible encryption)' : ''}</div>
                 <div><strong>MD5:</strong> <span style="font-size: 11px;">${hashes.md5 || 'N/A'}</span></div>
                 <div><strong>SHA1:</strong> <span style="font-size: 11px;">${hashes.sha1 || 'N/A'}</span></div>
                 <div><strong>SHA256:</strong> <span style="font-size: 11px;">${hashes.sha256 || 'N/A'}</span></div>
@@ -175,7 +175,7 @@ function displayFileAnalysis(analysis) {
         var pe_info = analysis.pe_info || {};
         html += `
             <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                <h4>🖥️ PE Information</h4>
+                <h4>PE Information</h4>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
                     <div><strong>Type:</strong> ${pe_info.pe_type || 'N/A'}</div>
                     <div><strong>Entry Point:</strong> ${pe_info.entry_point || 'N/A'}</div>
@@ -192,7 +192,7 @@ function displayFileAnalysis(analysis) {
         if (sections.length > 0) {
             html += `
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4> Section Analysis</h4>
+                    <h4>Section Analysis</h4>
                     <div style="overflow-x: auto;">
                         <table style="width:100%; border-collapse:collapse; font-size:13px;">
                             <tr style="background:#33a351; color:white;">
@@ -222,11 +222,11 @@ function displayFileAnalysis(analysis) {
         if (apis.length > 0) {
             html += `
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4> Suspicious APIs Detected</h4>
+                    <h4>Suspicious APIs Detected</h4>
                     <ul style="list-style:none; padding:0;">
             `;
             apis.forEach(function(api) {
-                html += `<li style="padding:5px; border-bottom:1px solid #eee;">🔴 <strong>${api.function}</strong> [${api.dll}] → ${api.category}</li>`;
+                html += `<li style="padding:5px; border-bottom:1px solid #eee;">[!] <strong>${api.function}</strong> [${api.dll}] -> ${api.category}</li>`;
             });
             html += `</ul></div>`;
         }
@@ -235,7 +235,7 @@ function displayFileAnalysis(analysis) {
         if (analysis.packer_detected) {
             html += `
                 <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #ffc107;">
-                    <strong> Packer Detected:</strong> ${analysis.packer_detected}
+                    <strong>Packer Detected:</strong> ${analysis.packer_detected}
                 </div>
             `;
         }
@@ -244,17 +244,17 @@ function displayFileAnalysis(analysis) {
     // Risk Assessment
     var risk = analysis.risk_level || 'Low';
     var riskColor = risk === 'Critical' ? '#dc3545' : risk === 'High' ? '#fd7e14' : risk === 'Medium' ? '#ffc107' : '#28a745';
-    var riskEmoji = risk === 'Critical' ? '🔴' : risk === 'High' ? '🟠' : risk === 'Medium' ? '🟡' : '🟢';
+    var riskSymbol = risk === 'Critical' ? '!!' : risk === 'High' ? '!' : risk === 'Medium' ? '?' : 'Ok';
     
     html += `
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4> Risk Assessment</h4>
+            <h4>Risk Assessment</h4>
             <div style="padding:15px; border-radius:8px; background:${riskColor}20; border:2px solid ${riskColor};">
-                <div style="font-size:24px; font-weight:700; color:${riskColor};">${riskEmoji} ${risk}</div>
+                <div style="font-size:24px; font-weight:700; color:${riskColor};">${riskSymbol} ${risk}</div>
                 <div style="margin-top:10px;">
-                    ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : 'No significant risk factors identified'}
+                    ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '[!] ' + f; }).join('<br>') : 'No significant risk factors identified'}
                 </div>
-                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;"> Analyzed as Windows PE (Portable Executable) file</div>` : ''}
+                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;">Analyzed as Windows PE (Portable Executable) file</div>` : ''}
             </div>
         </div>
     `;
@@ -297,7 +297,7 @@ function showDetails() {
     
     details.forEach(function(item, index) {
         var categoryColor = item.category === 'malicious' ? '#dc3545' : '#ffc107';
-        var categoryText = item.category === 'malicious' ? '🚨 Malicious' : '⚠️ Suspicious';
+        var categoryText = item.category === 'malicious' ? 'Malicious' : 'Suspicious';
         html += `
             <tr style="border-bottom:1px solid #eee;">
                 <td style="padding:8px;">${index + 1}</td>
@@ -332,5 +332,4 @@ function resetScan() {
     lastScanData = null;
 }
 
-console.log('%c🛡️ BOUGG Malware Detection Tool', 'font-size:20px; font-weight:bold; color:#33a351;');
-console.log('%c🔒 Loaded successfully!', 'font-size:14px; color:#6c757d;');
+console.log('BOUGG Malware Detection Tool Loaded Successfully');
