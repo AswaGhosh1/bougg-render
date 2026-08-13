@@ -3,18 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BOUGG - Malware Detection Tool</title>
-    <meta name="description" content="BOUGG is a professional malware detection tool that scans files for viruses, trojans, ransomware, and other security threats.">
+    <title>BOUGG - Professional Malware Detection Tool</title>
+    <meta name="description" content="BOUGG is a professional malware detection tool that scans files for malware, viruses, and security threats.">
     <meta name="keywords" content="malware detection, virus scanner, security tool, online malware scanner">
     <meta name="author" content="BOUGG Security Team">
-    <meta name="robots" content="index, follow">
-    
-    <meta property="og:title" content="BOUGG - Professional Malware Detection Tool">
-    <meta property="og:description" content="Advanced malware detection and file scanning tool.">
-    <meta property="og:type" content="website">
-    
-    <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
-    <link rel="manifest" href="manifest.json">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,9 +58,9 @@
             <section id="home" class="page active">
                 <div class="hero">
                     <div class="hero-content">
-                        
+                       
                         <h1>Advanced <span class="highlight">Malware Detection</span></h1>
-                        <p>Protect your system from viruses, trojans, ransomware, and zero-day threats with our cutting-edge detection engine powered by VirusTotal.</p>
+                        <p>Protect your system from viruses, trojans, ransomware, and zero-day threats with BOUGG's cutting-edge detection engine.</p>
                         <div class="hero-actions">
                             <a href="#scan" class="btn btn-primary btn-large" onclick="switchPage('scan')">
                                 Start Scanning
@@ -79,11 +71,11 @@
                         </div>
                         <div class="hero-stats">
                             <div class="stat">
-                                <span class="stat-number" data-target="10000">0</span>
+                                <span class="stat-number" data-target="100000">0</span>
                                 <span class="stat-label">Files Scanned</span>
                             </div>
                             <div class="stat">
-                                <span class="stat-number" data-target="5000">0</span>
+                                <span class="stat-number" data-target="50000">0</span>
                                 <span class="stat-label">Threats Detected</span>
                             </div>
                             <div class="stat">
@@ -108,8 +100,8 @@
                 <div class="card scan-card">
                     <div class="card-header">
                         <span class="card-icon"></span>
-                        <h2>VirusTotal File Scanner</h2>
-                        <p>Upload any file to scan with 70+ antivirus engines</p>
+                        <h2>BOUGG File Scanner</h2>
+                        <p>Upload any file to scan with BOUGG's multi-engine security system</p>
                     </div>
                     
                     <div class="scan-interface">
@@ -130,7 +122,9 @@
                                 </div>
                                 <button class="btn btn-danger btn-sm" onclick="clearFile()">✕</button>
                             </div>
-                            
+                            <button class="btn btn-success btn-large" onclick="scanFile()">
+                                🔬 Scan with BOUGG
+                            </button>
                         </div>
                         
                         <div id="scanResult" class="scan-result" style="display:none;"></div>
@@ -142,12 +136,12 @@
             <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
                 <div class="modal-content">
                     <button onclick="closeDetails()" class="modal-close">&times;</button>
-                    <h2>Detailed Results</h2>
+                    <h2>Detailed Scan Results</h2>
                     <div id="detailsContent"></div>
                 </div>
             </div>
 
-            <!-- ===== FILE INFORMATION ===== -->
+            <!-- ===== FILE ANALYSIS RESULTS ===== -->
             <div id="fileAnalysis" style="display:none; margin-top: 20px;"></div>
 
             <!-- ===== FEATURES PAGE ===== -->
@@ -162,8 +156,8 @@
                     <div class="features-grid">
                         <div class="feature-card">
                             <div class="feature-icon">🔍</div>
-                            <h4>70+ Antivirus Engines</h4>
-                            <p>Scan with multiple antivirus engines simultaneously</p>
+                            <h4>Multi-Engine Scanning</h4>
+                            <p>Scan with multiple security engines simultaneously</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">📊</div>
@@ -173,7 +167,7 @@
                         <div class="feature-card">
                             <div class="feature-icon">🔒</div>
                             <h4>Privacy First</h4>
-                            <p>Files are scanned securely with VirusTotal</p>
+                            <p>Your files are scanned securely with BOUGG</p>
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">⚡</div>
@@ -222,8 +216,8 @@
                                 <div class="step">
                                     <span class="step-number">2</span>
                                     <div>
-                                        <h4>Scan</h4>
-                                        <p>Checked against 70+ antivirus engines</p>
+                                        <h4>Scan with BOUGG</h4>
+                                        <p>Checked against multiple security engines</p>
                                     </div>
                                 </div>
                                 <div class="step">
@@ -239,9 +233,8 @@
                         <div class="about-section">
                             <h3>Contact</h3>
                             <div class="contact-info">
-                               
-                                <p>🐙 <a href="https://github.com/AswaGhosh1">GitHub</a></p>
-                                <p>💼 <a href="https://www.linkedin.com/in/aswaghosh-vishnu-gopan-18a537216/">LinkedIn</a></p>
+                                
+                                <p><a href="https://github.com/AswaGhosh1">GitHub</a></p>
                             </div>
                         </div>
                     </div>
@@ -271,7 +264,7 @@
                         <li><a href="#about" onclick="switchPage('about')">About</a></li>
                     </ul>
                 </div>
-               
+            </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 BOUGG Malware Detection Tool. All rights reserved.</p>
                 <p class="footer-credit">Made with ❤️ by the BOUGG Team</p>
