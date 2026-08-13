@@ -1,59 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- ===== META TAGS FOR SEO ===== -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>BOUGG - Professional Malware Detection & Security Tool</title>
-    <meta name="description" content="BOUGG is a professional malware detection tool that scans files for viruses, trojans, ransomware, and other security threats. Free and secure online malware scanner.">
-    <meta name="keywords" content="malware detection, virus scanner, security tool, online malware scanner, file scanner, cybersecurity, threat detection">
+    <meta name="description" content="BOUGG is a professional malware detection tool that scans files for viruses, trojans, ransomware, and other security threats.">
+    <meta name="keywords" content="malware detection, virus scanner, security tool, online malware scanner">
     <meta name="author" content="BOUGG Security Team">
     <meta name="robots" content="index, follow">
     
-    <!-- Open Graph / Social Media -->
     <meta property="og:title" content="BOUGG - Professional Malware Detection Tool">
-    <meta property="og:description" content="Advanced malware detection and file scanning tool. Protect your system from viruses, trojans, and ransomware.">
+    <meta property="og:description" content="Advanced malware detection and file scanning tool.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://bougg-malware-tool.com">
-    <meta property="og:image" content="https://bougg-malware-tool.com/icons/og-image.png">
     
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="BOUGG - Professional Malware Detection Tool">
-    <meta name="twitter:description" content="Advanced malware detection and file scanning tool. Protect your system from viruses, trojans, and ransomware.">
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://bougg-malware-tool.com/">
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="icons/favicon.ico">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
     <link rel="manifest" href="manifest.json">
     
-    <!-- Preconnect for Performance -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Main Stylesheet -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- Schema Markup for Rich Snippets -->
-    <script type="application/ld+json">
-    {
-        "@context": "https://schema.org",
-        "@type": "SoftwareApplication",
-        "name": "BOUGG Malware Detection Tool",
-        "applicationCategory": "SecurityApplication",
-        "operatingSystem": "Web",
-        "description": "Advanced malware detection and file scanning tool for identifying viruses, trojans, ransomware, and other security threats.",
-        "offers": {
-            "@type": "Offer",
-            "price": "0",
-            "priceCurrency": "USD"
-        }
-    }
-    </script>
 </head>
 <body>
     <!-- ===== PRELOADER ===== -->
@@ -62,73 +29,6 @@
             <div class="loader-ring"></div>
             <span>BOUGG</span>
         </div>
-    </div>
-
-    <!-- ===== LOGIN MODAL ===== -->
-    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
-        <div style="max-width:420px; margin:50px auto; background:white; border-radius:20px; padding:40px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
-            <button onclick="closeLoginModal()" style="position:absolute; top:15px; right:20px; font-size:28px; background:none; border:none; cursor:pointer; color:#6c757d; transition:0.3s;">&times;</button>
-            
-            <div style="text-align:center; margin-bottom:25px;">
-                <div style="font-size:48px; background:linear-gradient(135deg, #33a351, #1a7a34); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; box-shadow:0 4px 20px rgba(51,163,81,0.3);">
-                    <span style="font-size:32px;">🛡️</span>
-                </div>
-                <h2 style="color:#1a1a2e; margin:0;">Welcome to BOUGG</h2>
-                <p style="color:#6c757d; margin:5px 0 0; font-size:14px;">Malware Detection Tool</p>
-            </div>
-            
-            <!-- Login Form -->
-            <div id="loginForm">
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Username</label>
-                    <input type="text" id="loginUsername" placeholder="Enter your username" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px; transition:0.3s;">
-                </div>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px; transition:0.3s;">
-                </div>
-                <button onclick="loginUser()" style="width:100%; padding:14px; background:linear-gradient(135deg, #33a351, #1a7a34); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:16px; transition:0.3s; box-shadow:0 4px 15px rgba(51,163,81,0.3);">
-                    Login
-                </button>
-                <p style="text-align:center; margin-top:15px; font-size:14px; color:#6c757d;">
-                    Don't have an account? <a href="#" onclick="showRegister()" style="color:#33a351; font-weight:600; text-decoration:none;">Sign up</a>
-                </p>
-                <p style="text-align:center; margin-top:8px; font-size:12px; color:#6c757d; background:#f8f9fa; padding:8px; border-radius:6px;">
-                    Demo: admin / admin123
-                </p>
-            </div>
-            
-            <!-- Register Form -->
-            <div id="registerForm" style="display:none;">
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Username</label>
-                    <input type="text" id="registerUsername" placeholder="Choose a username" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
-                </div>
-                <div style="margin-bottom:15px;">
-                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Email (optional)</label>
-                    <input type="email" id="registerEmail" placeholder="Enter your email" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
-                </div>
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Password</label>
-                    <input type="password" id="registerPassword" placeholder="Min 6 characters" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
-                </div>
-                <button onclick="registerUser()" style="width:100%; padding:14px; background:linear-gradient(135deg, #33a351, #1a7a34); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:16px; box-shadow:0 4px 15px rgba(51,163,81,0.3);">
-                    Create Account
-                </button>
-                <p style="text-align:center; margin-top:15px; font-size:14px; color:#6c757d;">
-                    Already have an account? <a href="#" onclick="showLogin()" style="color:#33a351; font-weight:600; text-decoration:none;">Login</a>
-                </p>
-            </div>
-            
-            <div id="authMessage" style="display:none; margin-top:15px; padding:12px; border-radius:8px; text-align:center; font-weight:500;"></div>
-        </div>
-    </div>
-
-    <!-- ===== USER INFO BAR ===== -->
-    <div id="userBar" style="display:none; background:#f8f9fa; padding:10px 20px; border-bottom:2px solid #33a351; text-align:center; position:sticky; top:0; z-index:99;">
-        <span style="font-size:14px;">Welcome, <strong id="usernameDisplay" style="color:#33a351;">User</strong></span>
-        <span id="searchesRemaining" style="margin-left:20px; font-size:14px; color:#1a1a2e;"></span>
-        <button onclick="logoutUser()" style="margin-left:20px; padding:6px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; transition:0.3s;">Logout</button>
     </div>
 
     <!-- ===== HEADER ===== -->
@@ -154,7 +54,6 @@
                         <li><a href="#features" data-page="features">Features</a></li>
                         <li><a href="#feedback" data-page="feedback">Feedback</a></li>
                         <li><a href="#about" data-page="about">About</a></li>
-                        <li><a href="#" onclick="openLoginModal(); return false;" id="loginNavBtn" style="background:#33a351; color:white; border-radius:50px;">Login</a></li>
                     </ul>
                 </nav>
             </div>
@@ -277,31 +176,6 @@
             <!-- ===== FILE ANALYSIS RESULTS ===== -->
             <div id="fileAnalysis" style="display:none; margin-top: 20px;"></div>
 
-            <!-- ===== PE ANALYSIS ===== -->
-            <div id="peAnalysis" style="display:none; margin-top: 20px; border-top: 2px solid #e9ecef; padding-top: 20px;">
-                <h3 style="color: #33a351;">PE Analysis (PEStudio-Style)</h3>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>File Information</h4>
-                    <div id="peFileInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;"></div>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>Sections</h4>
-                    <div id="peSections" style="overflow-x: auto;"></div>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>Suspicious APIs</h4>
-                    <div id="peSuspiciousApis"></div>
-                </div>
-                
-                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>Risk Assessment</h4>
-                    <div id="peRisk"></div>
-                </div>
-            </div>
-
             <!-- ===== FEATURES PAGE ===== -->
             <section id="features" class="page" aria-label="Features">
                 <div class="card">
@@ -360,12 +234,10 @@
                             <label for="feedbackName">Your Name</label>
                             <input type="text" id="feedbackName" placeholder="John Doe" class="form-control">
                         </div>
-                        
                         <div class="form-group">
                             <label for="feedbackEmail">Email Address</label>
                             <input type="email" id="feedbackEmail" placeholder="john@example.com" class="form-control">
                         </div>
-                        
                         <div class="form-group">
                             <label for="feedbackCategory">Category</label>
                             <select id="feedbackCategory" class="form-control">
@@ -373,10 +245,8 @@
                                 <option value="bug">Bug Report</option>
                                 <option value="feature">Feature Request</option>
                                 <option value="security">Security Concern</option>
-                                <option value="other">Other</option>
                             </select>
                         </div>
-                        
                         <div class="form-group">
                             <label for="feedbackRating">Rating</label>
                             <div class="rating-stars" id="ratingStars">
@@ -388,19 +258,12 @@
                             </div>
                             <input type="hidden" id="feedbackRating" value="5">
                         </div>
-                        
                         <div class="form-group">
                             <label for="feedbackText">Your Feedback</label>
                             <textarea id="feedbackText" placeholder="Tell us about your experience with BOUGG..." class="form-control" rows="5" required></textarea>
                         </div>
-                        
-                        <button type="submit" class="btn btn-primary btn-large">
-                            Submit Feedback
-                        </button>
-                        
-                        <div id="feedbackSuccess" class="feedback-success">
-                            Thank you for your valuable feedback!
-                        </div>
+                        <button type="submit" class="btn btn-primary btn-large">Submit Feedback</button>
+                        <div id="feedbackSuccess" class="feedback-success">Thank you for your valuable feedback!</div>
                     </form>
                 </div>
             </section>

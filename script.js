@@ -8,7 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1000);
     initNavigation();
     initUploadZone();
-    checkLoginStatus();
+    initCounterAnimation();
 });
 
 // ===== NAVIGATION =====
@@ -25,7 +25,7 @@ function switchPage(pageId) {
 }
 
 function initNavigation() {
-    document.querySelectorAll('nav a:not([onclick])').forEach(link => {
+    document.querySelectorAll('nav a').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             var pageId = this.getAttribute('href').replace('#', '');
@@ -40,236 +40,117 @@ function initUploadZone() {
     var fileInput = document.getElementById('fileInput');
     if (!zone || !fileInput) return;
     
+    zone.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        this.classList.add('dragover');
+    });
+    
+    zone.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+    });
+    
+    zone.addEventListener('drop', function(e) {
+        e.preventDefault();
+        this.classList.remove('dragover');
+        if (e.dataTransfer.files.length) {
+            fileInput.files = e.dataTransfer.files;
+            handleFileSelect();
+        }
+    });
+    
+    fileInput.addEventListener('change', handleFileSelect);
     zone.addEventListener('click', function() {
         fileInput.click();
     });
+}
+
+function handleFileSelect() {
+    var fileInput = document.getElementById('fileInput');
+    var fileInfo = document.getElementById('fileInfo');
+    var fileName = document.getElementById('fileName');
+    var fileSize = document.getElementById('fileSize');
+    var uploadZone = document.getElementById('uploadZone');
+    var result = document.getElementById('scanResult');
     
-    fileInput.addEventListener('change', function() {
-        if (this.files.length > 0) {
-            var file = this.files[0];
-            document.getElementById('fileName').textContent = file.name;
-            document.getElementById('fileSize').textContent = (file.size / 1024).toFixed(1) + ' KB';
-            document.getElementById('fileInfo').style.display = 'block';
-            document.getElementById('uploadZone').style.display = 'none';
-            document.getElementById('scanResult').style.display = 'none';
-            document.getElementById('fileAnalysis').style.display = 'none';
-            document.getElementById('peAnalysis').style.display = 'none';
-        }
-    });
+    if (!fileInput.files.length) return;
+    
+    var file = fileInput.files[0];
+    var size = (file.size / 1024 / 1024).toFixed(2);
+    var sizeUnit = file.size > 1024 * 1024 ? 'MB' : 'KB';
+    var displaySize = file.size > 1024 * 1024 ? size : (file.size / 1024).toFixed(1);
+    
+    fileName.textContent = file.name;
+    fileSize.textContent = displaySize + ' ' + sizeUnit;
+    fileInfo.style.display = 'block';
+    uploadZone.style.display = 'none';
+    result.style.display = 'none';
+    document.getElementById('fileAnalysis').style.display = 'none';
+}
+
+function clearFile() {
+    var fileInput = document.getElementById('fileInput');
+    var fileInfo = document.getElementById('fileInfo');
+    var uploadZone = document.getElementById('uploadZone');
+    var result = document.getElementById('scanResult');
+    
+    fileInput.value = '';
+    fileInfo.style.display = 'none';
+    uploadZone.style.display = 'block';
+    result.style.display = 'none';
+    document.getElementById('fileAnalysis').style.display = 'none';
+}
+
+function resetScan() {
+    clearFile();
 }
 
 var lastScanData = null;
-
-// ===== AUTH FUNCTIONS =====
-function showLogin() {
-    document.getElementById('loginForm').style.display = 'block';
-    document.getElementById('registerForm').style.display = 'none';
-    document.getElementById('authMessage').style.display = 'none';
-}
-
-function showRegister() {
-    document.getElementById('loginForm').style.display = 'none';
-    document.getElementById('registerForm').style.display = 'block';
-    document.getElementById('authMessage').style.display = 'none';
-}
-
-function openLoginModal() {
-    document.getElementById('loginModal').style.display = 'block';
-    showLogin();
-    document.getElementById('loginUsername').value = '';
-    document.getElementById('loginPassword').value = '';
-}
-
-function closeLoginModal() {
-    document.getElementById('loginModal').style.display = 'none';
-}
-
-function showAuthMessage(message, isError) {
-    var msg = document.getElementById('authMessage');
-    msg.textContent = message;
-    msg.style.display = 'block';
-    msg.style.background = isError ? '#f8d7da' : '#d4edda';
-    msg.style.color = isError ? '#721c24' : '#155724';
-    msg.style.border = '1px solid ' + (isError ? '#f5c6cb' : '#c3e6cb');
-}
-
-function registerUser() {
-    var username = document.getElementById('registerUsername').value.trim();
-    var email = document.getElementById('registerEmail').value.trim();
-    var password = document.getElementById('registerPassword').value;
-    
-    if (!username || !password) {
-        showAuthMessage('Please fill in all required fields', true);
-        return;
-    }
-    
-    if (password.length < 6) {
-        showAuthMessage('Password must be at least 6 characters', true);
-        return;
-    }
-    
-    fetch('/api/register', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, email, password})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            showAuthMessage('Registration successful! Please login.', false);
-            setTimeout(showLogin, 1500);
-        } else {
-            showAuthMessage(data.error || 'Registration failed', true);
-        }
-    })
-    .catch(() => showAuthMessage('Server error. Please try again.', true));
-}
-
-function loginUser() {
-    var username = document.getElementById('loginUsername').value.trim();
-    var password = document.getElementById('loginPassword').value;
-    
-    if (!username || !password) {
-        showAuthMessage('Please enter username and password', true);
-        return;
-    }
-    
-    fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({username, password})
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            closeLoginModal();
-            updateUserUI(data.user);
-            checkRemainingSearches();
-            // Update login button
-            document.getElementById('loginNavBtn').textContent = 'Logout';
-            document.getElementById('loginNavBtn').onclick = function() { logoutUser(); return false; };
-        } else {
-            showAuthMessage(data.error || 'Invalid credentials', true);
-        }
-    })
-    .catch(() => showAuthMessage('Server error. Please try again.', true));
-}
-
-function logoutUser() {
-    fetch('/api/logout', {method: 'POST'})
-    .then(() => {
-        document.getElementById('userBar').style.display = 'none';
-        document.getElementById('loginNavBtn').textContent = 'Login';
-        document.getElementById('loginNavBtn').onclick = function() { openLoginModal(); return false; };
-        location.reload();
-    });
-}
-
-function updateUserUI(user) {
-    document.getElementById('userBar').style.display = 'block';
-    document.getElementById('usernameDisplay').textContent = user.username + (user.is_admin ? ' (Admin)' : '');
-}
-
-function checkRemainingSearches() {
-    fetch('/api/remaining-searches')
-    .then(response => response.json())
-    .then(data => {
-        if (data.remaining !== undefined) {
-            var display = data.remaining === Infinity ? 'Unlimited searches' : data.remaining + ' searches remaining';
-            document.getElementById('searchesRemaining').textContent = display;
-        }
-    })
-    .catch(() => {});
-}
-
-function checkLoginStatus() {
-    fetch('/api/user')
-    .then(response => {
-        if (response.status === 401) {
-            return null;
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data && data.id) {
-            updateUserUI(data);
-            checkRemainingSearches();
-            document.getElementById('loginNavBtn').textContent = 'Logout';
-            document.getElementById('loginNavBtn').onclick = function() { logoutUser(); return false; };
-        }
-    })
-    .catch(() => {});
-}
 
 // ===== SCAN FUNCTION =====
 function scanFile() {
     var fileInput = document.getElementById('fileInput');
     var result = document.getElementById('scanResult');
     
-    // Check if user is logged in
-    fetch('/api/user')
-    .then(response => {
-        if (response.status === 401) {
-            openLoginModal();
-            return Promise.reject('Please login first');
-        }
-        return response.json();
+    if (!fileInput.files.length) {
+        alert('Please select a file first!');
+        return;
+    }
+    
+    var file = fileInput.files[0];
+    var formData = new FormData();
+    formData.append('file', file);
+    
+    // Show loading
+    result.style.display = 'block';
+    result.className = 'scan-result';
+    result.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+            <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+            <p style="margin-top: 10px;">Analyzing file...</p>
+            <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
+        </div>
+    `;
+    document.getElementById('fileAnalysis').style.display = 'none';
+    
+    fetch('/api/scan', {
+        method: 'POST',
+        body: formData
     })
-    .then((userData) => {
-        if (!userData || !userData.id) {
-            openLoginModal();
-            return Promise.reject('Please login first');
-        }
-        
-        if (!fileInput.files.length) {
-            alert('Please select a file first!');
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            result.innerHTML = '<div style="color:red;">Error: ' + data.error + '</div>';
             return;
         }
         
-        var file = fileInput.files[0];
-        var formData = new FormData();
-        formData.append('file', file);
-        
-        result.style.display = 'block';
-        result.className = 'scan-result';
-        result.innerHTML = `
-            <div style="text-align: center; padding: 20px;">
-                <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-                <p style="margin-top: 10px;">Analyzing file...</p>
-                <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
-            </div>
-        `;
-        document.getElementById('fileAnalysis').style.display = 'none';
-        document.getElementById('peAnalysis').style.display = 'none';
-        
-        fetch('/api/scan', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.error) {
-                if (data.error.includes('limit')) {
-                    alert('Daily search limit reached! Please try again tomorrow.');
-                }
-                result.innerHTML = `<div style="color:red;">Error: ${data.error}</div>`;
-                return;
-            }
-            
-            lastScanData = data;
-            displayResults(data);
-            displayFileAnalysis(data.file_analysis);
-            checkRemainingSearches();
-        })
-        .catch(function(error) {
-            console.error('Error:', error);
-            result.innerHTML = `<div style="color:red;">Error connecting to backend. Please try again.</div>`;
-        });
+        lastScanData = data;
+        displayResults(data);
+        displayFileAnalysis(data.file_analysis);
     })
-    .catch(error => {
-        if (error !== 'Please login first') {
-            console.error('Auth error:', error);
-        }
+    .catch(function(error) {
+        console.error('Error:', error);
+        result.innerHTML = '<div style="color:red;">Error connecting to backend. Please make sure the server is running.</div>';
     });
 }
 
@@ -306,7 +187,6 @@ function displayResults(data) {
         
         <div style="font-size: 13px; color: #6c757d; margin: 10px 0;">
             Source: ${vt.source || 'Bougg Database'} | ${malicious}/${total || 1} engines detected
-            ${data.remaining_searches !== undefined ? ' | Remaining: ' + data.remaining_searches : ''}
         </div>
         
         ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">View Detected Threats (${malicious})</button>` : ''}
@@ -320,7 +200,7 @@ function displayFileAnalysis(analysis) {
     container.style.display = 'block';
     container.scrollIntoView({ behavior: 'smooth' });
     
-    var html = `<h3 style="color:#33a351; margin-top:20px;">Deep File Analysis</h3>`;
+    var html = '<h3 style="color:#33a351; margin-top:20px;">Deep File Analysis</h3>';
     
     var info = analysis.file_info || {};
     var hashes = analysis.hashes || {};
@@ -380,7 +260,7 @@ function displayFileAnalysis(analysis) {
                     </tr>
                 `;
             });
-            html += `</table></div></div>`;
+            html += '</table></div></div>';
         }
         
         var apis = analysis.suspicious_apis || [];
@@ -391,9 +271,9 @@ function displayFileAnalysis(analysis) {
                     <ul style="list-style:none; padding:0;">
             `;
             apis.forEach(function(api) {
-                html += `<li style="padding:5px; border-bottom:1px solid #eee;">[!] <strong>${api.function}</strong> [${api.dll}] -> ${api.category}</li>`;
+                html += '<li style="padding:5px; border-bottom:1px solid #eee;">[!] <strong>' + api.function + '</strong> [' + api.dll + '] -> ' + api.category + '</li>';
             });
-            html += `</ul></div>`;
+            html += '</ul></div>';
         }
         
         if (analysis.packer_detected) {
@@ -484,24 +364,57 @@ function closeDetails() {
     document.getElementById('detailsModal').style.display = 'none';
 }
 
-function resetScan() {
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInfo').style.display = 'none';
-    document.getElementById('uploadZone').style.display = 'block';
-    document.getElementById('scanResult').style.display = 'none';
-    document.getElementById('fileAnalysis').style.display = 'none';
-    document.getElementById('peAnalysis').style.display = 'none';
-    lastScanData = null;
+// ===== COUNTER ANIMATION =====
+function initCounterAnimation() {
+    var counters = document.querySelectorAll('.stat-number');
+    
+    var observer = new IntersectionObserver(function(entries) {
+        entries.forEach(function(entry) {
+            if (entry.isIntersecting) {
+                var target = parseInt(entry.target.dataset.target);
+                animateCounter(entry.target, target);
+                observer.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    counters.forEach(function(counter) {
+        observer.observe(counter);
+    });
 }
 
-function clearFile() {
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInfo').style.display = 'none';
-    document.getElementById('uploadZone').style.display = 'block';
-    document.getElementById('scanResult').style.display = 'none';
-    document.getElementById('fileAnalysis').style.display = 'none';
-    document.getElementById('peAnalysis').style.display = 'none';
-    lastScanData = null;
+function animateCounter(element, target) {
+    var current = 0;
+    var increment = target / 60;
+    
+    var timer = setInterval(function() {
+        current += increment;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        element.textContent = Math.round(current).toLocaleString() + (target === 99.9 ? '%' : '');
+    }, 25);
+}
+
+// ===== FEEDBACK FORM =====
+function submitFeedback(event) {
+    event.preventDefault();
+    
+    var text = document.getElementById('feedbackText').value.trim();
+    if (!text) {
+        alert('Please enter your feedback.');
+        return;
+    }
+    
+    var successMsg = document.getElementById('feedbackSuccess');
+    successMsg.classList.add('show');
+    
+    setTimeout(function() {
+        document.getElementById('feedbackForm').reset();
+        successMsg.classList.remove('show');
+    }, 3000);
 }
 
 console.log('BOUGG Malware Detection Tool Loaded Successfully');
+console.log('Unlimited scans - Enjoy!');

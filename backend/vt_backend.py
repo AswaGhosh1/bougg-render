@@ -7,6 +7,7 @@ import time
 import os
 import tempfile
 import math
+import json
 from datetime import datetime
 
 app = Flask(__name__, static_folder='../')
@@ -58,14 +59,10 @@ def analyze_file_general(file_content, filename):
     analysis['file_type'] = ext.upper() if ext else 'Unknown'
     
     # Check if it's a PE file
-    pe_signatures = [b'MZ', b'PE\x00\x00']
-    is_pe = False
     if file_content[:2] == b'MZ':
-        is_pe = True
         analysis['is_pe'] = True
         analysis['file_type'] = 'PE (Windows Executable)'
         
-        # Try to get more PE info
         try:
             import pefile
             with tempfile.NamedTemporaryFile(delete=False, suffix='.exe') as tmp:
@@ -102,7 +99,7 @@ def analyze_file_general(file_content, filename):
                 sections.append(section_data)
             analysis['pe_sections'] = sections
             
-            # Analyze imports
+            # Analyze imports for suspicious APIs
             suspicious_apis = {
                 'Process Injection': ['VirtualAllocEx', 'WriteProcessMemory', 'CreateRemoteThread', 'NtCreateThreadEx'],
                 'Keylogging': ['GetAsyncKeyState', 'GetKeyState', 'SetWindowsHookExA'],
@@ -148,14 +145,9 @@ def analyze_file_general(file_content, filename):
             
             # Packer detection
             packers = {
-                '.upx0': 'UPX',
-                '.upx1': 'UPX',
-                '.vmp': 'VMProtect',
-                '.themida': 'Themida',
-                '.enigma': 'Enigma Protector',
-                '.ors': 'Obsidium',
-                '.code': 'ASPack',
-                '.mackt': 'Armadillo'
+                '.upx0': 'UPX', '.upx1': 'UPX', '.vmp': 'VMProtect',
+                '.themida': 'Themida', '.enigma': 'Enigma Protector',
+                '.ors': 'Obsidium', '.code': 'ASPack', '.mackt': 'Armadillo'
             }
             detected_packer = None
             for section in pe.sections:
@@ -170,7 +162,7 @@ def analyze_file_general(file_content, filename):
             
             analysis['packer_detected'] = detected_packer
             analysis['risk_level'] = risk_level
-            analysis['risk_factors'] = risk_factors[:5]  # Limit to 5
+            analysis['risk_factors'] = risk_factors[:5]
             
             os.unlink(tmp_path)
             
@@ -179,6 +171,8 @@ def analyze_file_general(file_content, filename):
     
     return analysis
 
+# ===== MAIN ENDPOINTS =====
+
 @app.route('/')
 def serve_index():
     try:
@@ -186,26 +180,12 @@ def serve_index():
     except Exception as e:
         return f"Error: {str(e)}", 500
 
-@app.route('/style.css')
-def serve_css():
+@app.route('/<path:path>')
+def serve_static(path):
     try:
-        return send_from_directory('..', 'style.css', mimetype='text/css')
+        return send_from_directory('..', path)
     except Exception as e:
         return f"Error: {str(e)}", 404
-
-@app.route('/script.js')
-def serve_js():
-    try:
-        return send_from_directory('..', 'script.js', mimetype='application/javascript')
-    except Exception as e:
-        return f"Error: {str(e)}", 404
-
-@app.route('/manifest.json')
-def serve_manifest():
-    try:
-        return send_from_directory('..', 'manifest.json', mimetype='application/json')
-    except Exception as e:
-        return "Manifest not found", 404
 
 @app.route('/api/health')
 def health():
@@ -214,11 +194,11 @@ def health():
 @app.route('/api/scan', methods=['POST'])
 def scan_file():
     if 'file' not in request.files:
-        return {'error': 'No file uploaded'}, 400
+        return jsonify({'error': 'No file uploaded'}), 400
     
     file = request.files['file']
     if file.filename == '':
-        return {'error': 'No file selected'}, 400
+        return jsonify({'error': 'No file selected'}), 400
     
     try:
         content = file.read()
@@ -230,75 +210,78 @@ def scan_file():
         file_analysis = analyze_file_general(content, filename)
         
         # Check VirusTotal
-        response = requests.get(
-            f'{VT_API_URL}/files/{sha256}',
-            headers=headers,
-            timeout=30
-        )
-        
         vt_results = None
-        if response.status_code == 200:
-            data = response.json()
-            stats = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {})
-            results = data.get('data', {}).get('attributes', {}).get('last_analysis_results', {})
-            
-            detailed = []
-            for engine, result in results.items():
-                if result.get('category') in ['malicious', 'suspicious']:
-                    detailed.append({
-                        'engine': engine,
-                        'category': result.get('category', 'unknown'),
-                        'result': result.get('result', 'Detected')
-                    })
-            
-            vt_results = {
-                'stats': stats,
-                'is_malware': stats.get('malicious', 0) > 0,
-                'detailed_results': detailed,
-                'source': 'VirusTotal Database'
-            }
-        elif response.status_code == 404:
-            # Upload and scan
-            files = {'file': (filename, content)}
-            upload = requests.post(
-                f'{VT_API_URL}/files',
+        try:
+            response = requests.get(
+                f'{VT_API_URL}/files/{sha256}',
                 headers=headers,
-                files=files,
                 timeout=30
             )
             
-            if upload.status_code == 200:
-                analysis_id = upload.json().get('data', {}).get('id')
+            if response.status_code == 200:
+                data = response.json()
+                stats = data.get('data', {}).get('attributes', {}).get('last_analysis_stats', {})
+                results = data.get('data', {}).get('attributes', {}).get('last_analysis_results', {})
                 
-                for _ in range(15):
-                    time.sleep(2)
-                    result = requests.get(
-                        f'{VT_API_URL}/analyses/{analysis_id}',
-                        headers=headers,
-                        timeout=30
-                    )
-                    if result.status_code == 200:
-                        data = result.json()
-                        if data.get('data', {}).get('attributes', {}).get('status') == 'completed':
-                            stats = data.get('data', {}).get('attributes', {}).get('stats', {})
-                            results = data.get('data', {}).get('attributes', {}).get('results', {})
-                            
-                            detailed = []
-                            for engine, result_data in results.items():
-                                if result_data.get('category') in ['malicious', 'suspicious']:
-                                    detailed.append({
-                                        'engine': engine,
-                                        'category': result_data.get('category', 'unknown'),
-                                        'result': result_data.get('result', 'Detected')
-                                    })
-                            
-                            vt_results = {
-                                'stats': stats,
-                                'is_malware': stats.get('malicious', 0) > 0,
-                                'detailed_results': detailed,
-                                'source': 'VirusTotal Scan'
-                            }
-                            break
+                detailed = []
+                for engine, result in results.items():
+                    if result.get('category') in ['malicious', 'suspicious']:
+                        detailed.append({
+                            'engine': engine,
+                            'category': result.get('category', 'unknown'),
+                            'result': result.get('result', 'Detected')
+                        })
+                
+                vt_results = {
+                    'stats': stats,
+                    'is_malware': stats.get('malicious', 0) > 0,
+                    'detailed_results': detailed,
+                    'source': 'VirusTotal Database'
+                }
+            elif response.status_code == 404:
+                # Upload and scan
+                files = {'file': (filename, content)}
+                upload = requests.post(
+                    f'{VT_API_URL}/files',
+                    headers=headers,
+                    files=files,
+                    timeout=30
+                )
+                
+                if upload.status_code == 200:
+                    analysis_id = upload.json().get('data', {}).get('id')
+                    
+                    for attempt in range(15):
+                        time.sleep(2)
+                        result = requests.get(
+                            f'{VT_API_URL}/analyses/{analysis_id}',
+                            headers=headers,
+                            timeout=30
+                        )
+                        if result.status_code == 200:
+                            data = result.json()
+                            if data.get('data', {}).get('attributes', {}).get('status') == 'completed':
+                                stats = data.get('data', {}).get('attributes', {}).get('stats', {})
+                                results = data.get('data', {}).get('attributes', {}).get('results', {})
+                                
+                                detailed = []
+                                for engine, result_data in results.items():
+                                    if result_data.get('category') in ['malicious', 'suspicious']:
+                                        detailed.append({
+                                            'engine': engine,
+                                            'category': result_data.get('category', 'unknown'),
+                                            'result': result_data.get('result', 'Detected')
+                                        })
+                                
+                                vt_results = {
+                                    'stats': stats,
+                                    'is_malware': stats.get('malicious', 0) > 0,
+                                    'detailed_results': detailed,
+                                    'source': 'VirusTotal Scan'
+                                }
+                                break
+        except Exception as e:
+            print(f"VirusTotal error: {str(e)}")
         
         # Combine results
         result_data = {
@@ -311,11 +294,11 @@ def scan_file():
         
         return jsonify(result_data)
         
-    except requests.exceptions.Timeout:
-        return {'error': 'VirusTotal API timeout'}, 408
     except Exception as e:
-        return {'error': str(e)}, 500
+        print(f"Scan error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
+    print(f"🛡️ BOUGG Backend running on port {port}")
     app.run(host='0.0.0.0', port=port)
