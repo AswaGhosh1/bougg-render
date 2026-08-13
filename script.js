@@ -64,7 +64,7 @@ function scanFile() {
     var result = document.getElementById('scanResult');
     
     if (!fileInput.files.length) {
-        alert('⚠️ Please select a file first!');
+        alert('Please select a file first!');
         return;
     }
     
@@ -78,7 +78,7 @@ function scanFile() {
     result.innerHTML = `
         <div style="text-align: center; padding: 20px;">
             <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <p style="margin-top: 10px;">🔄 Analyzing file...</p>
+            <p style="margin-top: 10px;"Analyzing file...</p>
             <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
         </div>
     `;
@@ -117,8 +117,8 @@ function displayResults(data) {
     
     result.className = 'scan-result ' + (isMalware ? 'danger' : 'safe');
     result.innerHTML = `
-        <div class="result-icon">${isMalware ? '🚨' : '✅'}</div>
-        <h3>${isMalware ? '⚠️ Malware Detected!' : '✅ File is Safe!'}</h3>
+        <div class="result-icon">${isMalware ?  : }</div>
+        <h3>${isMalware ? 'Malware Detected!' : 'File is Safe!'}</h3>
         <p>${isMalware ? malicious + ' antivirus engines detected threats' : 'No threats detected'}</p>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 15px 0;">
@@ -137,10 +137,10 @@ function displayResults(data) {
         </div>
         
         <div style="font-size: 13px; color: #6c757d; margin: 10px 0;">
-            Source: ${vt.source || 'VirusTotal'} | ${malicious}/${total || 1} engines detected
+            Source: ${vt.source || 'Bougg Database'} | ${malicious}/${total || 1} engines detected
         </div>
         
-        ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">🔍 View Detected Threats (${malicious})</button>` : ''}
+        ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;"> View Detected Threats (${malicious})</button>` : ''}
         
         <button class="btn btn-secondary" onclick="resetScan()" style="margin-top: 15px;">Scan Another File</button>
     `;
@@ -151,14 +151,14 @@ function displayFileAnalysis(analysis) {
     container.style.display = 'block';
     container.scrollIntoView({ behavior: 'smooth' });
     
-    var html = `<h3 style="color:#33a351; margin-top:20px;">🔬 Deep File Analysis</h3>`;
+    var html = `<h3 style="color:#33a351; margin-top:20px;"> Deep File Analysis</h3>`;
     
     // File Info
     var info = analysis.file_info || {};
     var hashes = analysis.hashes || {};
     html += `
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4>📋 File Information</h4>
+            <h4> File Information</h4>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
                 <div><strong>File Type:</strong> ${analysis.file_type || 'Unknown'}</div>
                 <div><strong>Size:</strong> ${info.file_size_human || 'N/A'}</div>
@@ -192,7 +192,7 @@ function displayFileAnalysis(analysis) {
         if (sections.length > 0) {
             html += `
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>📂 Section Analysis</h4>
+                    <h4> Section Analysis</h4>
                     <div style="overflow-x: auto;">
                         <table style="width:100%; border-collapse:collapse; font-size:13px;">
                             <tr style="background:#33a351; color:white;">
@@ -203,7 +203,7 @@ function displayFileAnalysis(analysis) {
                             </tr>
             `;
             sections.forEach(function(s) {
-                var status = s.suspicious ? '⚠️ Suspicious' : '✅ Normal';
+                var status = s.suspicious ? 'Suspicious' : 'Normal';
                 var color = s.suspicious ? '#dc3545' : '#28a745';
                 html += `
                     <tr style="border-bottom:1px solid #eee;">
@@ -222,7 +222,7 @@ function displayFileAnalysis(analysis) {
         if (apis.length > 0) {
             html += `
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-                    <h4>⚠️ Suspicious APIs Detected</h4>
+                    <h4> Suspicious APIs Detected</h4>
                     <ul style="list-style:none; padding:0;">
             `;
             apis.forEach(function(api) {
@@ -235,7 +235,7 @@ function displayFileAnalysis(analysis) {
         if (analysis.packer_detected) {
             html += `
                 <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #ffc107;">
-                    <strong>📦 Packer Detected:</strong> ${analysis.packer_detected}
+                    <strong> Packer Detected:</strong> ${analysis.packer_detected}
                 </div>
             `;
         }
@@ -248,13 +248,13 @@ function displayFileAnalysis(analysis) {
     
     html += `
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4>🎯 Risk Assessment</h4>
+            <h4> Risk Assessment</h4>
             <div style="padding:15px; border-radius:8px; background:${riskColor}20; border:2px solid ${riskColor};">
                 <div style="font-size:24px; font-weight:700; color:${riskColor};">${riskEmoji} ${risk}</div>
                 <div style="margin-top:10px;">
-                    ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : '✅ No significant risk factors identified'}
+                    ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : 'No significant risk factors identified'}
                 </div>
-                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;">🔬 Analyzed as Windows PE (Portable Executable) file</div>` : ''}
+                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;"> Analyzed as Windows PE (Portable Executable) file</div>` : ''}
             </div>
         </div>
     `;
