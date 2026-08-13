@@ -9,8 +9,9 @@ import os
 app = Flask(__name__)
 CORS(app)
 
-# Get the absolute path to the project root
-BASE_DIR = "/home/kali/Projects/Bougg/render-deploy"
+# Dynamically get the project root directory
+# This will work on both your local machine and Render
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 BOUGG_API_KEY = "0caee396efcd2b1d519789dcf1ba2083d9ca503d1dff27292b3cf327c28c340b"
 BOUGG_API_URL = "https://www.virustotal.com/api/v3"
