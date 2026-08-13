@@ -1,4 +1,4 @@
-// ===== HIDE PRELOADER =====
+// ===== DOM READY =====
 document.addEventListener('DOMContentLoaded', function() {
     setTimeout(function() {
         var preloader = document.getElementById('preloader');
@@ -51,7 +51,7 @@ function initUploadZone() {
             document.getElementById('fileInfo').style.display = 'block';
             document.getElementById('uploadZone').style.display = 'none';
             document.getElementById('scanResult').style.display = 'none';
-            document.getElementById('peAnalysis').style.display = 'none';
+            document.getElementById('fileAnalysis').style.display = 'none';
         }
     });
 }
@@ -78,11 +78,11 @@ function scanFile() {
     result.innerHTML = `
         <div style="text-align: center; padding: 20px;">
             <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <p style="margin-top: 10px;">🔄 Scanning with VirusTotal...</p>
-            <p style="font-size: 14px; color: #6c757d;">Checking 70+ antivirus engines</p>
+            <p style="margin-top: 10px;">🔄 Analyzing file...</p>
+            <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
         </div>
     `;
-    document.getElementById('peAnalysis').style.display = 'none';
+    document.getElementById('fileAnalysis').style.display = 'none';
     
     fetch('/api/scan', {
         method: 'POST',
@@ -97,11 +97,7 @@ function scanFile() {
         
         lastScanData = data;
         displayResults(data);
-        
-        // Show PE analysis if available
-        if (data.pe_analysis) {
-            displayPEAnalysis(data.pe_analysis);
-        }
+        displayFileAnalysis(data.file_analysis);
     })
     .catch(function(error) {
         console.error('Error:', error);
@@ -111,12 +107,13 @@ function scanFile() {
 
 function displayResults(data) {
     var result = document.getElementById('scanResult');
-    var stats = data.stats || {};
+    var vt = data.vt_results || {};
+    var stats = vt.stats || {};
     var malicious = stats.malicious || 0;
     var suspicious = stats.suspicious || 0;
     var undetected = stats.undetected || 0;
-    var isMalware = data.is_malware || false;
-    var totalEngines = data.detailed_results ? data.detailed_results.length + undetected : 0;
+    var isMalware = vt.is_malware || false;
+    var total = malicious + suspicious + undetected;
     
     result.className = 'scan-result ' + (isMalware ? 'danger' : 'safe');
     result.innerHTML = `
@@ -140,7 +137,7 @@ function displayResults(data) {
         </div>
         
         <div style="font-size: 13px; color: #6c757d; margin: 10px 0;">
-            Source: ${data.source || 'VirusTotal'} | ${malicious}/${malicious + suspicious + undetected} engines detected
+            Source: ${vt.source || 'VirusTotal'} | ${malicious}/${total || 1} engines detected
         </div>
         
         ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">🔍 View Detected Threats (${malicious})</button>` : ''}
@@ -149,66 +146,130 @@ function displayResults(data) {
     `;
 }
 
-function displayPEAnalysis(pe) {
-    var container = document.getElementById('peAnalysis');
+function displayFileAnalysis(analysis) {
+    var container = document.getElementById('fileAnalysis');
     container.style.display = 'block';
+    container.scrollIntoView({ behavior: 'smooth' });
+    
+    var html = `<h3 style="color:#33a351; margin-top:20px;">🔬 Deep File Analysis</h3>`;
     
     // File Info
-    var infoHTML = '';
-    var info = pe.file_info || {};
-    for (var key in info) {
-        infoHTML += `<div><strong>${key.replace(/_/g, ' ').toUpperCase()}:</strong> ${info[key] || 'N/A'}</div>`;
+    var info = analysis.file_info || {};
+    var hashes = analysis.hashes || {};
+    html += `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <h4>📋 File Information</h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
+                <div><strong>File Type:</strong> ${analysis.file_type || 'Unknown'}</div>
+                <div><strong>Size:</strong> ${info.file_size_human || 'N/A'}</div>
+                <div><strong>Entropy:</strong> ${analysis.entropy || 'N/A'} ${analysis.entropy > 7.0 ? '⚠️ (High - possible encryption)' : ''}</div>
+                <div><strong>MD5:</strong> <span style="font-size: 11px;">${hashes.md5 || 'N/A'}</span></div>
+                <div><strong>SHA1:</strong> <span style="font-size: 11px;">${hashes.sha1 || 'N/A'}</span></div>
+                <div><strong>SHA256:</strong> <span style="font-size: 11px;">${hashes.sha256 || 'N/A'}</span></div>
+            </div>
+        </div>
+    `;
+    
+    // PE-specific info
+    if (analysis.is_pe) {
+        var pe_info = analysis.pe_info || {};
+        html += `
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <h4>🖥️ PE Information</h4>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;">
+                    <div><strong>Type:</strong> ${pe_info.pe_type || 'N/A'}</div>
+                    <div><strong>Entry Point:</strong> ${pe_info.entry_point || 'N/A'}</div>
+                    <div><strong>Image Base:</strong> ${pe_info.image_base || 'N/A'}</div>
+                    <div><strong>Sections:</strong> ${pe_info.number_of_sections || 'N/A'}</div>
+                    <div><strong>Machine:</strong> ${pe_info.machine || 'N/A'}</div>
+                    <div><strong>Timestamp:</strong> ${pe_info.timestamp || 'N/A'}</div>
+                </div>
+            </div>
+        `;
+        
+        // Sections
+        var sections = analysis.pe_sections || [];
+        if (sections.length > 0) {
+            html += `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>📂 Section Analysis</h4>
+                    <div style="overflow-x: auto;">
+                        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                            <tr style="background:#33a351; color:white;">
+                                <th style="padding:8px;">Name</th>
+                                <th style="padding:8px;">Entropy</th>
+                                <th style="padding:8px;">Size</th>
+                                <th style="padding:8px;">Status</th>
+                            </tr>
+            `;
+            sections.forEach(function(s) {
+                var status = s.suspicious ? '⚠️ Suspicious' : '✅ Normal';
+                var color = s.suspicious ? '#dc3545' : '#28a745';
+                html += `
+                    <tr style="border-bottom:1px solid #eee;">
+                        <td style="padding:8px;"><strong>${s.name}</strong></td>
+                        <td style="padding:8px;">${s.entropy}</td>
+                        <td style="padding:8px;">${s.size_human}</td>
+                        <td style="padding:8px; color:${color};">${status}</td>
+                    </tr>
+                `;
+            });
+            html += `</table></div></div>`;
+        }
+        
+        // Suspicious APIs
+        var apis = analysis.suspicious_apis || [];
+        if (apis.length > 0) {
+            html += `
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>⚠️ Suspicious APIs Detected</h4>
+                    <ul style="list-style:none; padding:0;">
+            `;
+            apis.forEach(function(api) {
+                html += `<li style="padding:5px; border-bottom:1px solid #eee;">🔴 <strong>${api.function}</strong> [${api.dll}] → ${api.category}</li>`;
+            });
+            html += `</ul></div>`;
+        }
+        
+        // Packer detection
+        if (analysis.packer_detected) {
+            html += `
+                <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #ffc107;">
+                    <strong>📦 Packer Detected:</strong> ${analysis.packer_detected}
+                </div>
+            `;
+        }
     }
-    document.getElementById('peFileInfo').innerHTML = infoHTML;
     
-    // Sections
-    var sections = pe.sections || [];
-    var sectionsHTML = '<table style="width:100%; border-collapse:collapse; font-size:13px;"><tr style="background:#33a351; color:white;"><th style="padding:8px;">Name</th><th style="padding:8px;">Entropy</th><th style="padding:8px;">Size</th><th style="padding:8px;">Status</th></tr>';
-    sections.forEach(function(s) {
-        var status = s.suspicious ? '⚠️ Suspicious' : '✅ Normal';
-        var color = s.suspicious ? '#dc3545' : '#28a745';
-        sectionsHTML += `<tr style="border-bottom:1px solid #eee;">
-            <td style="padding:8px;"><strong>${s.name}</strong></td>
-            <td style="padding:8px;">${s.entropy}</td>
-            <td style="padding:8px;">${s.size_human}</td>
-            <td style="padding:8px; color:${color};">${status}</td>
-        </tr>`;
-    });
-    sectionsHTML += '</table>';
-    document.getElementById('peSections').innerHTML = sectionsHTML;
-    
-    // Suspicious APIs
-    var apis = pe.suspicious_apis || [];
-    var apisHTML = '';
-    if (apis.length > 0) {
-        apisHTML = '<ul style="list-style:none; padding:0;">';
-        apis.forEach(function(api) {
-            apisHTML += `<li style="padding:5px; border-bottom:1px solid #eee;">🔴 <strong>${api.function}</strong> [${api.dll}] → ${api.category}</li>`;
-        });
-        apisHTML += '</ul>';
-    } else {
-        apisHTML = '<p style="color:#28a745;">✅ No suspicious APIs detected</p>';
-    }
-    document.getElementById('peSuspiciousApis').innerHTML = apisHTML;
-    
-    // Risk
-    var risk = pe.overall_risk || 'Low';
+    // Risk Assessment
+    var risk = analysis.risk_level || 'Low';
     var riskColor = risk === 'Critical' ? '#dc3545' : risk === 'High' ? '#fd7e14' : risk === 'Medium' ? '#ffc107' : '#28a745';
-    var riskHTML = `<div style="padding:15px; border-radius:8px; background:${riskColor}20; border:2px solid ${riskColor};">
-        <div style="font-size:24px; font-weight:700; color:${riskColor};">${risk}</div>
-        <div style="margin-top:10px;">${pe.risk_factors ? pe.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : 'No significant risk factors'}</div>
-        ${pe.packer_detected ? `<div style="margin-top:10px; background:#fff3cd; padding:5px 10px; border-radius:5px;">📦 Packer: ${pe.packer_detected}</div>` : ''}
-    </div>`;
-    document.getElementById('peRisk').innerHTML = riskHTML;
+    var riskEmoji = risk === 'Critical' ? '🔴' : risk === 'High' ? '🟠' : risk === 'Medium' ? '🟡' : '🟢';
+    
+    html += `
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <h4>🎯 Risk Assessment</h4>
+            <div style="padding:15px; border-radius:8px; background:${riskColor}20; border:2px solid ${riskColor};">
+                <div style="font-size:24px; font-weight:700; color:${riskColor};">${riskEmoji} ${risk}</div>
+                <div style="margin-top:10px;">
+                    ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '⚠️ ' + f; }).join('<br>') : '✅ No significant risk factors identified'}
+                </div>
+                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;">🔬 Analyzed as Windows PE (Portable Executable) file</div>` : ''}
+            </div>
+        </div>
+    `;
+    
+    container.innerHTML = html;
 }
 
 // ===== SHOW DETAILED RESULTS =====
 function showDetails() {
     if (!lastScanData) return;
     
+    var vt = lastScanData.vt_results || {};
+    var details = vt.detailed_results || [];
     var modal = document.getElementById('detailsModal');
     var content = document.getElementById('detailsContent');
-    var details = lastScanData.detailed_results || [];
     
     if (details.length === 0) {
         content.innerHTML = '<p>No detailed results available.</p>';
@@ -220,7 +281,6 @@ function showDetails() {
         <div style="margin-bottom:20px;">
             <p><strong>File:</strong> ${lastScanData.filename}</p>
             <p><strong>SHA256:</strong> <span style="font-size:12px; word-break:break-all;">${lastScanData.sha256}</span></p>
-            <p><strong>Total Detections:</strong> ${lastScanData.stats.malicious}/${Object.keys(lastScanData.stats || {}).reduce(function(a,b){return a+lastScanData.stats[b];}, 0)}</p>
         </div>
         <div style="overflow-x:auto;">
             <table style="width:100%; border-collapse:collapse; font-size:14px;">
@@ -252,7 +312,7 @@ function showDetails() {
                 </tbody>
             </table>
         </div>
-        <p style="margin-top:15px; font-size:12px; color:#6c757d;">Showing ${details.length} threats detected by VirusTotal</p>
+        <p style="margin-top:15px; font-size:12px; color:#6c757d;">Showing ${details.length} threats detected</p>
     `;
     
     content.innerHTML = html;
@@ -268,16 +328,7 @@ function resetScan() {
     document.getElementById('fileInfo').style.display = 'none';
     document.getElementById('uploadZone').style.display = 'block';
     document.getElementById('scanResult').style.display = 'none';
-    document.getElementById('peAnalysis').style.display = 'none';
-    lastScanData = null;
-}
-
-function clearFile() {
-    document.getElementById('fileInput').value = '';
-    document.getElementById('fileInfo').style.display = 'none';
-    document.getElementById('uploadZone').style.display = 'block';
-    document.getElementById('scanResult').style.display = 'none';
-    document.getElementById('peAnalysis').style.display = 'none';
+    document.getElementById('fileAnalysis').style.display = 'none';
     lastScanData = null;
 }
 
