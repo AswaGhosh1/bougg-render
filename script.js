@@ -16,6 +16,9 @@ document.addEventListener('DOMContentLoaded', function() {
     initNavigation();
     initUploadZone();
     initCounterAnimation();
+    
+    console.log('🐞 BOUGG Malware Detection Tool Loaded Successfully');
+    console.log('Powered by Bougg - 70+ Antivirus Engines');
 });
 
 // ===== NAVIGATION =====
@@ -66,10 +69,23 @@ function initUploadZone() {
         }
     });
     
-    fileInput.addEventListener('change', handleFileSelect);
+    fileInput.addEventListener('change', function() {
+        console.log('File input changed');
+        handleFileSelect();
+    });
+    
     zone.addEventListener('click', function() {
         fileInput.click();
     });
+    
+    // Also handle the "Choose File" label click
+    var chooseBtn = document.querySelector('label[for="fileInput"]');
+    if (chooseBtn) {
+        chooseBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            fileInput.click();
+        });
+    }
 }
 
 function handleFileSelect() {
@@ -80,19 +96,30 @@ function handleFileSelect() {
     var uploadZone = document.getElementById('uploadZone');
     var result = document.getElementById('scanResult');
     
-    if (!fileInput.files.length) return;
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
+        console.log('No file selected');
+        return;
+    }
     
     var file = fileInput.files[0];
+    console.log('File selected:', file.name, file.size);
+    
     var size = (file.size / 1024 / 1024).toFixed(2);
     var sizeUnit = file.size > 1024 * 1024 ? 'MB' : 'KB';
     var displaySize = file.size > 1024 * 1024 ? size : (file.size / 1024).toFixed(1);
     
     fileName.textContent = file.name;
     fileSize.textContent = displaySize + ' ' + sizeUnit;
+    
+    // Force show file info and hide upload zone
     fileInfo.style.display = 'block';
+    fileInfo.style.visibility = 'visible';
+    fileInfo.style.opacity = '1';
     uploadZone.style.display = 'none';
     result.style.display = 'none';
     document.getElementById('fileAnalysis').style.display = 'none';
+    
+    console.log('File info displayed, scan button should be visible');
 }
 
 function clearFile() {
@@ -119,7 +146,7 @@ function scanFile() {
     var fileInput = document.getElementById('fileInput');
     var result = document.getElementById('scanResult');
     
-    if (!fileInput.files.length) {
+    if (!fileInput || !fileInput.files || !fileInput.files.length) {
         alert('Please select a file first!');
         return;
     }
@@ -134,7 +161,7 @@ function scanFile() {
     result.innerHTML = `
         <div style="text-align: center; padding: 20px;">
             <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <p style="margin-top: 10px; font-weight: 600;">Scanning...</p>
+            <p style="margin-top: 10px; font-weight: 600;">Scanning with VirusTotal...</p>
             <p style="font-size: 14px; color: #6c757d;">Checking 70+ antivirus engines</p>
         </div>
     `;
@@ -179,14 +206,14 @@ function displayResults(data) {
     if (isMalware && vt.detailed_results) {
         detailsHtml = `
             <button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">
-                🔍 View Detected Threats (${malicious})
+                View Detected Threats (${malicious})
             </button>
         `;
     }
     
     result.innerHTML = `
-        <div class="result-icon">${isMalware ? '🚨' : '✅'}</div>
-        <h3>${isMalware ? '⚠️ Malware Detected!' : '✅ File is Safe!'}</h3>
+        <div class="result-icon">${isMalware ? }</div>
+        <h3>${isMalware ? 'Malware Detected!' : 'File is Safe!'}</h3>
         <p>${isMalware ? malicious + ' antivirus engines detected threats' : 'No threats detected by any engine'}</p>
         
         <div class="result-stats">
@@ -224,7 +251,7 @@ function displayFileInfo(info) {
     
     var html = `
         <div class="card" style="padding: 30px;">
-            <h3 style="color: #33a351; font-size: 22px; font-weight: 700; margin-bottom: 20px;">📋 File Information</h3>
+            <h3 style="color: #33a351; font-size: 22px; font-weight: 700; margin-bottom: 20px;">File Information</h3>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
                 <div class="analysis-item"><span class="label">Filename</span><span class="value">${info.filename || 'N/A'}</span></div>
                 <div class="analysis-item"><span class="label">File Size</span><span class="value">${info.size_human || 'N/A'}</span></div>
@@ -280,7 +307,7 @@ function showDetails() {
     
     details.forEach(function(item, index) {
         var categoryColor = item.category === 'malicious' ? '#dc3545' : '#ffc107';
-        var categoryText = item.category === 'malicious' ? '🚨 Malicious' : '⚠️ Suspicious';
+        var categoryText = item.category === 'malicious' ? 'Malicious' : 'Suspicious';
         html += `
             <tr>
                 <td>${index + 1}</td>
@@ -368,6 +395,3 @@ function submitFeedback(event) {
         if (successMsg) successMsg.classList.remove('show');
     }, 3000);
 }
-
-console.log('🐞 BOUGG Malware Detection Tool Loaded Successfully');
-console.log('Powered by Bougg - 70+ Antivirus Engines');
