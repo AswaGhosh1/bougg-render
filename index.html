@@ -64,6 +64,73 @@
         </div>
     </div>
 
+    <!-- ===== LOGIN MODAL ===== -->
+    <div id="loginModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
+        <div style="max-width:420px; margin:50px auto; background:white; border-radius:20px; padding:40px; position:relative; box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+            <button onclick="closeLoginModal()" style="position:absolute; top:15px; right:20px; font-size:28px; background:none; border:none; cursor:pointer; color:#6c757d; transition:0.3s;">&times;</button>
+            
+            <div style="text-align:center; margin-bottom:25px;">
+                <div style="font-size:48px; background:linear-gradient(135deg, #33a351, #1a7a34); width:80px; height:80px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 15px; box-shadow:0 4px 20px rgba(51,163,81,0.3);">
+                    <span style="font-size:32px;">🛡️</span>
+                </div>
+                <h2 style="color:#1a1a2e; margin:0;">Welcome to BOUGG</h2>
+                <p style="color:#6c757d; margin:5px 0 0; font-size:14px;">Malware Detection Tool</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginForm">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Username</label>
+                    <input type="text" id="loginUsername" placeholder="Enter your username" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px; transition:0.3s;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Password</label>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px; transition:0.3s;">
+                </div>
+                <button onclick="loginUser()" style="width:100%; padding:14px; background:linear-gradient(135deg, #33a351, #1a7a34); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:16px; transition:0.3s; box-shadow:0 4px 15px rgba(51,163,81,0.3);">
+                    Login
+                </button>
+                <p style="text-align:center; margin-top:15px; font-size:14px; color:#6c757d;">
+                    Don't have an account? <a href="#" onclick="showRegister()" style="color:#33a351; font-weight:600; text-decoration:none;">Sign up</a>
+                </p>
+                <p style="text-align:center; margin-top:8px; font-size:12px; color:#6c757d; background:#f8f9fa; padding:8px; border-radius:6px;">
+                    Demo: admin / admin123
+                </p>
+            </div>
+            
+            <!-- Register Form -->
+            <div id="registerForm" style="display:none;">
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Username</label>
+                    <input type="text" id="registerUsername" placeholder="Choose a username" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
+                </div>
+                <div style="margin-bottom:15px;">
+                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Email (optional)</label>
+                    <input type="email" id="registerEmail" placeholder="Enter your email" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
+                </div>
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-weight:600; margin-bottom:6px; font-size:14px; color:#1a1a2e;">Password</label>
+                    <input type="password" id="registerPassword" placeholder="Min 6 characters" style="width:100%; padding:12px 16px; border:2px solid #e9ecef; border-radius:10px; font-size:15px;">
+                </div>
+                <button onclick="registerUser()" style="width:100%; padding:14px; background:linear-gradient(135deg, #33a351, #1a7a34); color:white; border:none; border-radius:10px; font-weight:600; cursor:pointer; font-size:16px; box-shadow:0 4px 15px rgba(51,163,81,0.3);">
+                    Create Account
+                </button>
+                <p style="text-align:center; margin-top:15px; font-size:14px; color:#6c757d;">
+                    Already have an account? <a href="#" onclick="showLogin()" style="color:#33a351; font-weight:600; text-decoration:none;">Login</a>
+                </p>
+            </div>
+            
+            <div id="authMessage" style="display:none; margin-top:15px; padding:12px; border-radius:8px; text-align:center; font-weight:500;"></div>
+        </div>
+    </div>
+
+    <!-- ===== USER INFO BAR ===== -->
+    <div id="userBar" style="display:none; background:#f8f9fa; padding:10px 20px; border-bottom:2px solid #33a351; text-align:center; position:sticky; top:0; z-index:99;">
+        <span style="font-size:14px;">Welcome, <strong id="usernameDisplay" style="color:#33a351;">User</strong></span>
+        <span id="searchesRemaining" style="margin-left:20px; font-size:14px; color:#1a1a2e;"></span>
+        <button onclick="logoutUser()" style="margin-left:20px; padding:6px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-size:13px; font-weight:500; transition:0.3s;">Logout</button>
+    </div>
+
     <!-- ===== HEADER ===== -->
     <header class="header" role="banner">
         <div class="container">
@@ -87,6 +154,7 @@
                         <li><a href="#features" data-page="features">Features</a></li>
                         <li><a href="#feedback" data-page="feedback">Feedback</a></li>
                         <li><a href="#about" data-page="about">About</a></li>
+                        <li><a href="#" onclick="openLoginModal(); return false;" id="loginNavBtn" style="background:#33a351; color:white; border-radius:50px;">Login</a></li>
                     </ul>
                 </nav>
             </div>
@@ -101,7 +169,6 @@
             <section id="home" class="page active" aria-label="Home">
                 <div class="hero">
                     <div class="hero-content">
-
                         <h1>Advanced <span class="highlight">Malware Detection</span> Tool</h1>
                         <p>Protect your system from viruses, trojans, ransomware, and zero-day threats with our cutting-edge detection engine.</p>
                         <div class="hero-actions">
@@ -199,46 +266,41 @@
             </section>
 
             <!-- ===== DETAILED RESULTS MODAL ===== -->
-<div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
-    <div style="max-width:800px; margin:50px auto; background:white; border-radius:15px; padding:30px; position:relative;">
-        <button onclick="closeDetails()" style="position:absolute; top:10px; right:20px; font-size:30px; background:none; border:none; cursor:pointer;">&times;</button>
-        <h2 style="color:#33a351; margin-bottom:20px;">🔍 Detailed Results</h2>
-        <div id="detailsContent"></div>
-    </div>
-</div>
+            <div id="detailsModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:1000; overflow-y:auto;">
+                <div style="max-width:800px; margin:50px auto; background:white; border-radius:15px; padding:30px; position:relative;">
+                    <button onclick="closeDetails()" style="position:absolute; top:10px; right:20px; font-size:30px; background:none; border:none; cursor:pointer;">&times;</button>
+                    <h2 style="color:#33a351; margin-bottom:20px;">Detailed Results</h2>
+                    <div id="detailsContent"></div>
+                </div>
+            </div>
 
-<!-- ===== FILE ANALYSIS RESULTS ===== -->
-<div id="fileAnalysis" style="display:none; margin-top: 20px;"></div>
+            <!-- ===== FILE ANALYSIS RESULTS ===== -->
+            <div id="fileAnalysis" style="display:none; margin-top: 20px;"></div>
 
-<!-- Add after VirusTotal results -->
-<div id="peAnalysis" style="display:none; margin-top: 20px; border-top: 2px solid #e9ecef; padding-top: 20px;">
-    <h3 style="color: #33a351;">🔬 PE Analysis (PEStudio-Style)</h3>
-    
-    <!-- File Info -->
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-        <h4>📋 File Information</h4>
-        <div id="peFileInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;"></div>
-    </div>
-    
-    <!-- Sections -->
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-        <h4>📂 Sections</h4>
-        <div id="peSections" style="overflow-x: auto;"></div>
-    </div>
-    
-    <!-- Suspicious APIs -->
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-        <h4>⚠️ Suspicious APIs</h4>
-        <div id="peSuspiciousApis"></div>
-    </div>
-    
-    <!-- Risk Assessment -->
-    <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-        <h4>🎯 Risk Assessment</h4>
-        <div id="peRisk"></div>
-    </div>
-</div>
-
+            <!-- ===== PE ANALYSIS ===== -->
+            <div id="peAnalysis" style="display:none; margin-top: 20px; border-top: 2px solid #e9ecef; padding-top: 20px;">
+                <h3 style="color: #33a351;">PE Analysis (PEStudio-Style)</h3>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>File Information</h4>
+                    <div id="peFileInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 13px;"></div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>Sections</h4>
+                    <div id="peSections" style="overflow-x: auto;"></div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>Suspicious APIs</h4>
+                    <div id="peSuspiciousApis"></div>
+                </div>
+                
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <h4>Risk Assessment</h4>
+                    <div id="peRisk"></div>
+                </div>
+            </div>
 
             <!-- ===== FEATURES PAGE ===== -->
             <section id="features" class="page" aria-label="Features">
@@ -333,11 +395,11 @@
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-large">
-                            📤 Submit Feedback
+                            Submit Feedback
                         </button>
                         
                         <div id="feedbackSuccess" class="feedback-success">
-                            ✅ Thank you for your valuable feedback!
+                            Thank you for your valuable feedback!
                         </div>
                     </form>
                 </div>
@@ -355,8 +417,8 @@
                     <div class="about-content">
                         <div class="about-section">
                             <h3>Our Mission</h3>
-                           <p>BOUGG was created to provide accessible and professional-grade malware detection tools to users worldwide. We believe that everyone deserves protection from cyber threats, regardless of technical expertise.</p>
-</div>
+                            <p>BOUGG was created to provide accessible and professional-grade malware detection tools to users worldwide. We believe that everyone deserves protection from cyber threats, regardless of technical expertise.</p>
+                        </div>
                         
                         <div class="about-section">
                             <h3>How It Works</h3>
@@ -400,9 +462,8 @@
                         <div class="about-section">
                             <h3>Contact Us</h3>
                             <div class="contact-info">
-
-                                <p>🐦 Github: <a href="#">https://github.com/AswaGhosh1</a></p>
-                                <p>💼 LinkedIn: <a href="#">https://www.linkedin.com/in/aswaghosh-vishnu-gopan-18a537216/</a></p>
+                                <p>Github: <a href="#">https://github.com/AswaGhosh1</a></p>
+                                <p>LinkedIn: <a href="#">https://www.linkedin.com/in/aswaghosh-vishnu-gopan-18a537216/</a></p>
                             </div>
                         </div>
                     </div>
@@ -422,7 +483,6 @@
                         <span class="logo-text">BOUGG</span>
                     </div>
                     <p>Advanced malware detection tool for everyone. Stay safe, stay secure.</p>
-
                 </div>
                 <div class="footer-col">
                     <h4>Quick Links</h4>
@@ -433,8 +493,6 @@
                         <li><a href="#feedback" onclick="switchPage('feedback')">Feedback</a></li>
                     </ul>
                 </div>
-              
-               
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 BOUGG Malware Detection Tool. All rights reserved.</p>

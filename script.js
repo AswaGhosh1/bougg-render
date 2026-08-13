@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 1000);
     initNavigation();
     initUploadZone();
+    checkLoginStatus();
 });
 
 // ===== NAVIGATION =====
@@ -24,7 +25,7 @@ function switchPage(pageId) {
 }
 
 function initNavigation() {
-    document.querySelectorAll('nav a').forEach(link => {
+    document.querySelectorAll('nav a:not([onclick])').forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
             var pageId = this.getAttribute('href').replace('#', '');
@@ -52,56 +53,223 @@ function initUploadZone() {
             document.getElementById('uploadZone').style.display = 'none';
             document.getElementById('scanResult').style.display = 'none';
             document.getElementById('fileAnalysis').style.display = 'none';
+            document.getElementById('peAnalysis').style.display = 'none';
         }
     });
 }
 
 var lastScanData = null;
 
+// ===== AUTH FUNCTIONS =====
+function showLogin() {
+    document.getElementById('loginForm').style.display = 'block';
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('authMessage').style.display = 'none';
+}
+
+function showRegister() {
+    document.getElementById('loginForm').style.display = 'none';
+    document.getElementById('registerForm').style.display = 'block';
+    document.getElementById('authMessage').style.display = 'none';
+}
+
+function openLoginModal() {
+    document.getElementById('loginModal').style.display = 'block';
+    showLogin();
+    document.getElementById('loginUsername').value = '';
+    document.getElementById('loginPassword').value = '';
+}
+
+function closeLoginModal() {
+    document.getElementById('loginModal').style.display = 'none';
+}
+
+function showAuthMessage(message, isError) {
+    var msg = document.getElementById('authMessage');
+    msg.textContent = message;
+    msg.style.display = 'block';
+    msg.style.background = isError ? '#f8d7da' : '#d4edda';
+    msg.style.color = isError ? '#721c24' : '#155724';
+    msg.style.border = '1px solid ' + (isError ? '#f5c6cb' : '#c3e6cb');
+}
+
+function registerUser() {
+    var username = document.getElementById('registerUsername').value.trim();
+    var email = document.getElementById('registerEmail').value.trim();
+    var password = document.getElementById('registerPassword').value;
+    
+    if (!username || !password) {
+        showAuthMessage('Please fill in all required fields', true);
+        return;
+    }
+    
+    if (password.length < 6) {
+        showAuthMessage('Password must be at least 6 characters', true);
+        return;
+    }
+    
+    fetch('/api/register', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, email, password})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showAuthMessage('Registration successful! Please login.', false);
+            setTimeout(showLogin, 1500);
+        } else {
+            showAuthMessage(data.error || 'Registration failed', true);
+        }
+    })
+    .catch(() => showAuthMessage('Server error. Please try again.', true));
+}
+
+function loginUser() {
+    var username = document.getElementById('loginUsername').value.trim();
+    var password = document.getElementById('loginPassword').value;
+    
+    if (!username || !password) {
+        showAuthMessage('Please enter username and password', true);
+        return;
+    }
+    
+    fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({username, password})
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            closeLoginModal();
+            updateUserUI(data.user);
+            checkRemainingSearches();
+            // Update login button
+            document.getElementById('loginNavBtn').textContent = 'Logout';
+            document.getElementById('loginNavBtn').onclick = function() { logoutUser(); return false; };
+        } else {
+            showAuthMessage(data.error || 'Invalid credentials', true);
+        }
+    })
+    .catch(() => showAuthMessage('Server error. Please try again.', true));
+}
+
+function logoutUser() {
+    fetch('/api/logout', {method: 'POST'})
+    .then(() => {
+        document.getElementById('userBar').style.display = 'none';
+        document.getElementById('loginNavBtn').textContent = 'Login';
+        document.getElementById('loginNavBtn').onclick = function() { openLoginModal(); return false; };
+        location.reload();
+    });
+}
+
+function updateUserUI(user) {
+    document.getElementById('userBar').style.display = 'block';
+    document.getElementById('usernameDisplay').textContent = user.username + (user.is_admin ? ' (Admin)' : '');
+}
+
+function checkRemainingSearches() {
+    fetch('/api/remaining-searches')
+    .then(response => response.json())
+    .then(data => {
+        if (data.remaining !== undefined) {
+            var display = data.remaining === Infinity ? 'Unlimited searches' : data.remaining + ' searches remaining';
+            document.getElementById('searchesRemaining').textContent = display;
+        }
+    })
+    .catch(() => {});
+}
+
+function checkLoginStatus() {
+    fetch('/api/user')
+    .then(response => {
+        if (response.status === 401) {
+            return null;
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.id) {
+            updateUserUI(data);
+            checkRemainingSearches();
+            document.getElementById('loginNavBtn').textContent = 'Logout';
+            document.getElementById('loginNavBtn').onclick = function() { logoutUser(); return false; };
+        }
+    })
+    .catch(() => {});
+}
+
 // ===== SCAN FUNCTION =====
 function scanFile() {
     var fileInput = document.getElementById('fileInput');
     var result = document.getElementById('scanResult');
     
-    if (!fileInput.files.length) {
-        alert('Please select a file first!');
-        return;
-    }
-    
-    var file = fileInput.files[0];
-    var formData = new FormData();
-    formData.append('file', file);
-    
-    // Show loading
-    result.style.display = 'block';
-    result.className = 'scan-result';
-    result.innerHTML = `
-        <div style="text-align: center; padding: 20px;">
-            <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
-            <p style="margin-top: 10px;">Analyzing file...</p>
-            <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
-        </div>
-    `;
-    document.getElementById('fileAnalysis').style.display = 'none';
-    
-    fetch('/api/scan', {
-        method: 'POST',
-        body: formData
+    // Check if user is logged in
+    fetch('/api/user')
+    .then(response => {
+        if (response.status === 401) {
+            openLoginModal();
+            return Promise.reject('Please login first');
+        }
+        return response.json();
     })
-    .then(response => response.json())
-    .then(data => {
-        if (data.error) {
-            result.innerHTML = `<div style="color:red;">Error: ${data.error}</div>`;
+    .then((userData) => {
+        if (!userData || !userData.id) {
+            openLoginModal();
+            return Promise.reject('Please login first');
+        }
+        
+        if (!fileInput.files.length) {
+            alert('Please select a file first!');
             return;
         }
         
-        lastScanData = data;
-        displayResults(data);
-        displayFileAnalysis(data.file_analysis);
+        var file = fileInput.files[0];
+        var formData = new FormData();
+        formData.append('file', file);
+        
+        result.style.display = 'block';
+        result.className = 'scan-result';
+        result.innerHTML = `
+            <div style="text-align: center; padding: 20px;">
+                <div style="width:40px; height:40px; border:4px solid #f3f3f3; border-top:4px solid #33a351; border-radius:50%; animation: spin 1s linear infinite; margin: 0 auto;"></div>
+                <p style="margin-top: 10px;">Analyzing file...</p>
+                <p style="font-size: 14px; color: #6c757d;">Checking with VirusTotal + performing deep analysis</p>
+            </div>
+        `;
+        document.getElementById('fileAnalysis').style.display = 'none';
+        document.getElementById('peAnalysis').style.display = 'none';
+        
+        fetch('/api/scan', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                if (data.error.includes('limit')) {
+                    alert('Daily search limit reached! Please try again tomorrow.');
+                }
+                result.innerHTML = `<div style="color:red;">Error: ${data.error}</div>`;
+                return;
+            }
+            
+            lastScanData = data;
+            displayResults(data);
+            displayFileAnalysis(data.file_analysis);
+            checkRemainingSearches();
+        })
+        .catch(function(error) {
+            console.error('Error:', error);
+            result.innerHTML = `<div style="color:red;">Error connecting to backend. Please try again.</div>`;
+        });
     })
-    .catch(function(error) {
-        console.error('Error:', error);
-        result.innerHTML = `<div style="color:red;">Error connecting to backend. Please try again.</div>`;
+    .catch(error => {
+        if (error !== 'Please login first') {
+            console.error('Auth error:', error);
+        }
     });
 }
 
@@ -138,6 +306,7 @@ function displayResults(data) {
         
         <div style="font-size: 13px; color: #6c757d; margin: 10px 0;">
             Source: ${vt.source || 'Bougg Database'} | ${malicious}/${total || 1} engines detected
+            ${data.remaining_searches !== undefined ? ' | Remaining: ' + data.remaining_searches : ''}
         </div>
         
         ${isMalware ? `<button class="btn btn-primary" onclick="showDetails()" style="margin: 10px 0;">View Detected Threats (${malicious})</button>` : ''}
@@ -153,7 +322,6 @@ function displayFileAnalysis(analysis) {
     
     var html = `<h3 style="color:#33a351; margin-top:20px;">Deep File Analysis</h3>`;
     
-    // File Info
     var info = analysis.file_info || {};
     var hashes = analysis.hashes || {};
     html += `
@@ -170,7 +338,6 @@ function displayFileAnalysis(analysis) {
         </div>
     `;
     
-    // PE-specific info
     if (analysis.is_pe) {
         var pe_info = analysis.pe_info || {};
         html += `
@@ -187,7 +354,6 @@ function displayFileAnalysis(analysis) {
             </div>
         `;
         
-        // Sections
         var sections = analysis.pe_sections || [];
         if (sections.length > 0) {
             html += `
@@ -217,7 +383,6 @@ function displayFileAnalysis(analysis) {
             html += `</table></div></div>`;
         }
         
-        // Suspicious APIs
         var apis = analysis.suspicious_apis || [];
         if (apis.length > 0) {
             html += `
@@ -231,7 +396,6 @@ function displayFileAnalysis(analysis) {
             html += `</ul></div>`;
         }
         
-        // Packer detection
         if (analysis.packer_detected) {
             html += `
                 <div style="background: #fff3cd; padding: 10px; border-radius: 8px; margin: 10px 0; border: 1px solid #ffc107;">
@@ -241,7 +405,6 @@ function displayFileAnalysis(analysis) {
         }
     }
     
-    // Risk Assessment
     var risk = analysis.risk_level || 'Low';
     var riskColor = risk === 'Critical' ? '#dc3545' : risk === 'High' ? '#fd7e14' : risk === 'Medium' ? '#ffc107' : '#28a745';
     var riskSymbol = risk === 'Critical' ? '!!' : risk === 'High' ? '!' : risk === 'Medium' ? '?' : 'Ok';
@@ -254,7 +417,6 @@ function displayFileAnalysis(analysis) {
                 <div style="margin-top:10px;">
                     ${analysis.risk_factors && analysis.risk_factors.length > 0 ? analysis.risk_factors.map(function(f) { return '[!] ' + f; }).join('<br>') : 'No significant risk factors identified'}
                 </div>
-                ${analysis.is_pe ? `<div style="margin-top:10px; font-size:12px; color:#6c757d;">Analyzed as Windows PE (Portable Executable) file</div>` : ''}
             </div>
         </div>
     `;
@@ -262,7 +424,6 @@ function displayFileAnalysis(analysis) {
     container.innerHTML = html;
 }
 
-// ===== SHOW DETAILED RESULTS =====
 function showDetails() {
     if (!lastScanData) return;
     
@@ -329,6 +490,17 @@ function resetScan() {
     document.getElementById('uploadZone').style.display = 'block';
     document.getElementById('scanResult').style.display = 'none';
     document.getElementById('fileAnalysis').style.display = 'none';
+    document.getElementById('peAnalysis').style.display = 'none';
+    lastScanData = null;
+}
+
+function clearFile() {
+    document.getElementById('fileInput').value = '';
+    document.getElementById('fileInfo').style.display = 'none';
+    document.getElementById('uploadZone').style.display = 'block';
+    document.getElementById('scanResult').style.display = 'none';
+    document.getElementById('fileAnalysis').style.display = 'none';
+    document.getElementById('peAnalysis').style.display = 'none';
     lastScanData = null;
 }
 
